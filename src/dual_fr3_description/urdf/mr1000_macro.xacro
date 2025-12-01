@@ -25,8 +25,10 @@
         xyz="0 0 0"
         rpy="0 0 0" />
       <geometry>
-        <mesh
-          filename="package://dual_fr3_description/meshes/base_link.STL" />
+        <!-- <mesh
+          filename="package://dual_fr3_description/meshes/base_link.STL" /> -->
+
+        <box size="0.8 0.6 0.3" />
       </geometry>
       <material
         name="">
@@ -34,13 +36,20 @@
           rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
       </material>
     </visual>
-    <collision>
+    <!-- <collision>
       <origin
         xyz="0 0 0"
         rpy="0 0 0" />
       <geometry>
         <mesh
           filename="package://dual_fr3_description/meshes/base_link.STL" />
+      </geometry>
+    </collision> -->
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" /> 
+      <geometry>
+        <box size="0.8 0.6 0.3" /> 
       </geometry>
     </collision>
   </link>
@@ -65,8 +74,10 @@
         xyz="0 0 0"
         rpy="0 0 0" />
       <geometry>
-        <mesh
-          filename="package://dual_fr3_description/meshes/wheel_LF_link.STL" />
+        <!-- <mesh
+          filename="package://dual_fr3_description/meshes/wheel_LF_link.STL" /> -->
+
+        <cylinder radius="0.1" length="0.05"/>
       </geometry>
       <material
         name="">
@@ -74,13 +85,20 @@
           rgba="1 0.945098039215686 0.905882352941176 1" />
       </material>
     </visual>
-    <collision>
+    <!-- <collision>
       <origin
         xyz="0 0 0"
         rpy="0 0 0" />
       <geometry>
         <mesh
           filename="package://dual_fr3_description/meshes/wheel_LF_link.STL" />
+      </geometry>
+    </collision> -->
+
+    <collision>
+      <origin xyz="0 0 0" rpy="${pi/2} 0 0" /> 
+      <geometry>
+        <cylinder radius="0.1" length="0.05"/>
       </geometry>
     </collision>
   </link>
@@ -118,8 +136,10 @@
         xyz="0 0 0"
         rpy="0 0 0" />
       <geometry>
-        <mesh
-          filename="package://dual_fr3_description/meshes/wheel_LF_link.STL" />
+        <!-- <mesh
+          filename="package://dual_fr3_description/meshes/wheel_LF_link.STL" /> -->
+
+        <cylinder radius="0.1" length="0.05"/>
       </geometry>
       <material
         name="">
@@ -127,13 +147,20 @@
           rgba="1 0.945098039215686 0.905882352941176 1" />
       </material>
     </visual>
-    <collision>
+    <!-- <collision>
       <origin
         xyz="0 0 0"
         rpy="0 0 0" />
       <geometry>
         <mesh
           filename="package://dual_fr3_description/meshes/wheel_LF_link.STL" />
+      </geometry>
+    </collision> -->
+
+    <collision>
+      <origin xyz="0 0 0" rpy="${pi/2} 0 0" /> 
+      <geometry>
+        <cylinder radius="0.1" length="0.05"/>
       </geometry>
     </collision>
   </link>
@@ -171,8 +198,10 @@
         xyz="0 0 0"
         rpy="0 0 0" />
       <geometry>
-        <mesh
-          filename="package://dual_fr3_description/meshes/wheel_LF_link.STL" />
+        <!-- <mesh
+          filename="package://dual_fr3_description/meshes/wheel_LF_link.STL" /> -->
+
+        <cylinder radius="0.1" length="0.05"/>
       </geometry>
       <material
         name="">
@@ -180,13 +209,20 @@
           rgba="1 0.945098039215686 0.905882352941176 1" />
       </material>
     </visual>
-    <collision>
+    <!-- <collision>
       <origin
         xyz="0 0 0"
         rpy="0 0 0" />
       <geometry>
         <mesh
           filename="package://dual_fr3_description/meshes/wheel_LF_link.STL" />
+      </geometry>
+    </collision> -->
+
+    <collision>
+      <origin xyz="0 0 0" rpy="${pi/2} 0 0" /> 
+      <geometry>
+        <cylinder radius="0.1" length="0.05"/>
       </geometry>
     </collision>
   </link>
@@ -224,8 +260,10 @@
         xyz="0 0 0"
         rpy="0 0 0" />
       <geometry>
-        <mesh
-          filename="package://dual_fr3_description/meshes/wheel_LF_link.STL" />
+        <!-- <mesh
+          filename="package://dual_fr3_description/meshes/wheel_LF_link.STL" /> -->
+
+        <cylinder radius="0.1" length="0.05"/>
       </geometry>
       <material
         name="">
@@ -233,13 +271,20 @@
           rgba="1 0.945098039215686 0.905882352941176 1" />
       </material>
     </visual>
-    <collision>
+    <!-- <collision>
       <origin
         xyz="0 0 0"
         rpy="0 0 0" />
       <geometry>
         <mesh
           filename="package://dual_fr3_description/meshes/wheel_LF_link.STL" />
+      </geometry>
+    </collision> -->
+
+    <collision>
+      <origin xyz="0 0 0" rpy="${pi/2} 0 0" /> 
+      <geometry>
+        <cylinder radius="0.1" length="0.05"/>
       </geometry>
     </collision>
   </link>
