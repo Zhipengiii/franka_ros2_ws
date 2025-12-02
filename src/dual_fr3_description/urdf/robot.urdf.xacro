@@ -1,0 +1,45 @@
+
+<robot xmlns:xacro="http://ros.org/wiki/xacro" name="robot">
+    <xacro:include filename="$(find dual_fr3_description)/urdf/mr1000_macro.xacro"/>
+
+    <xacro:mr1000_description_macro />
+
+    <xacro:arg name="arm_id" default="fr3" />
+    <!-- The prefix of the robot -->
+    <xacro:arg name="arm_prefix" default="mk1000_" />
+
+    <xacro:include filename="$(find franka_description)/robots/common/franka_arm.xacro" />
+    <xacro:include filename="$(find franka_description)/end_effectors/common/franka_hand.xacro" />
+    <xacro:include filename="$(find franka_description)/end_effectors/common/utils.xacro" />
+    <!-- 手动创建franka连接parent的joint，防止franka的urdf自动创建parent link -->
+    <joint name="$(arg arm_prefix)$(arg arm_id)base_link_joint" type="fixed">
+      <parent link="base_link"/>
+      <child link="$(arg arm_prefix)$(arg arm_id)_link0"/>
+      <origin rpy="0 0 0" xyz="0.21271369635331 -0.00206901390850131 0.776600015232103"/>
+    </joint>
+    <xacro:franka_arm 
+      arm_id="$(arg arm_id)"
+      arm_prefix="$(arg arm_prefix)"
+      joint_limits="${xacro.load_yaml('$(find franka_description)/robots/$(arg arm_id)/joint_limits.yaml')}"
+      inertials="${xacro.load_yaml('$(find franka_description)/robots/$(arg arm_id)/inertials.yaml')}"
+      kinematics="${xacro.load_yaml('$(find franka_description)/robots/$(arg arm_id)/kinematics.yaml')}"
+      dynamics="${xacro.load_yaml('$(find franka_description)/robots/$(arg arm_id)/dynamics.yaml')}"
+      accelerometer_config="${xacro.load_yaml('$(find franka_description)/robots/$(arg arm_id)/accelerometers.yaml')}"
+      connected_to="" 
+      xyz='0.21271369635331 -0.00206901390850131 0.776600015232103'
+      rpy='0.0183822092720268 0 0'
+      gazebo="false">
+    </xacro:franka_arm>
+    <!-- <xacro:arg name="ee_id" default="franka_hand" /> -->
+    <xacro:franka_hand 
+      arm_id="$(arg arm_id)"
+      arm_prefix="$(arg arm_prefix)"
+      connected_to="$(arg arm_prefix)$(arg arm_id)_link8" 
+      ee_id="franka_hand_white"
+      ee_inertials="${xacro.load_yaml('$(find franka_description)/end_effectors/franka_hand/inertials.yaml')}"
+      xyz_ee='0 0 0.002'
+      rpy_ee='0 0 -0.785398163'
+      gazebo="false">
+    </xacro:franka_hand>
+
+</robot>

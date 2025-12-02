@@ -1,22 +1,35 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="dual_fr3_robot">
 
-  <xacro:include filename="$(find dual_fr3_description)/urdf/mr1000_macro.xacro"/>
-  <xacro:include filename="$(find franka_description)/robots/common/franka_robot.xacro"/>
-  
-  <xacro:property name="joint_limits" value="${xacro.load_yaml('$(find franka_description)/robots/fr3/joint_limits.yaml')}" />
-  <xacro:property name="kinematics" value="${xacro.load_yaml('$(find franka_description)/robots/fr3/kinematics.yaml')}" />
-  <xacro:property name="inertials" value="${xacro.load_yaml('$(find franka_description)/robots/fr3/inertials.yaml')}" />
-  <xacro:property name="dynamics" value="${xacro.load_yaml('$(find franka_description)/robots/fr3/dynamics.yaml')}" />
-
-  <xacro:mr1000_description_macro/> 
-
   <link name="world"/>
   <joint name="world_to_base" type="fixed">
     <parent link="world"/>
     <child link="base_link"/>
     <origin xyz="0 0 0" rpy="0 0 0"/>
   </joint>
+
+  <xacro:include filename="$(find dual_fr3_description)/urdf/mr1000_macro.xacro"/>
+
+  <joint name="left_fr3_fixed_joint" type="fixed">
+      <parent link="base_link" />
+      <child link="left_fr3_link0" />
+      <origin xyz="0.153 0.06 0.9685" rpy="-1.5707963267949 -1.5707963267949 0" />
+  </joint>
+
+  <joint name="right_fr3_fixed_joint" type="fixed">
+      <parent link="base_link" />
+      <child link="right_fr3_link0" />
+      <origin xyz="0.153 -0.06 0.9685" rpy="1.5707963267949 -1.5707963267949 0" />
+  </joint>
+
+  <xacro:include filename="$(find franka_description)/robots/common/franka_robot.xacro"/>
+  
+  <!-- 加载 YAML 配置 -->
+  <xacro:property name="joint_limits" value="${xacro.load_yaml('$(find franka_description)/robots/fr3/joint_limits.yaml')}" />
+  <xacro:property name="kinematics" value="${xacro.load_yaml('$(find franka_description)/robots/fr3/kinematics.yaml')}" />
+  <xacro:property name="inertials" value="${xacro.load_yaml('$(find franka_description)/robots/fr3/inertials.yaml')}" />
+  <xacro:property name="dynamics" value="${xacro.load_yaml('$(find franka_description)/robots/fr3/dynamics.yaml')}" />
+  <xacro:property name="accelerometer_config" value="${xacro.load_yaml('$(find franka_description)/robots/fr3/accelerometers.yaml')}" />
 
   <xacro:franka_robot arm_id="fr3"
                       arm_prefix="left_"
@@ -28,12 +41,6 @@
                       inertials="${inertials}"
                       dynamics="${dynamics}"/>
 
-  <joint name="left_fr3_mount_joint" type="fixed">
-      <parent link="base_link" />
-      <child link="left_fr3_link0" />
-      <origin xyz="0.153 0.06 0.9685" rpy="-1.5707963267949 -1.5707963267949 0" />
-  </joint>
-
   <xacro:franka_robot arm_id="fr3"
                       arm_prefix="right_"
                       connected_to=""
@@ -43,11 +50,5 @@
                       kinematics="${kinematics}"
                       inertials="${inertials}"
                       dynamics="${dynamics}"/>
-                      
-  <joint name="right_fr3_mount_joint" type="fixed">
-      <parent link="base_link" />
-      <child link="right_fr3_link0" />
-      <origin xyz="0.153 -0.06 0.9685" rpy="1.5707963267949 -1.5707963267949 0" />
-  </joint>
-
+        
 </robot>
