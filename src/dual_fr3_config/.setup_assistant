@@ -1,0 +1,25 @@
+moveit_setup_assistant_config:
+  urdf:
+    package: dual_fr3_description
+    relative_path: urdf/dual_fr3_robot.urdf
+  srdf:
+    relative_path: config/dual_fr3_robot.srdf
+  package_settings:
+    author_name: zzp
+    author_email: 1579906368@qq.com
+    generated_timestamp: 1764676430
+  control_xacro:
+    command:
+      - position
+    state:
+      - position
+      - velocity
+  modified_urdf:
+    xacros:
+      - control_xacro
+  control_xacro:
+    command:
+      - position
+    state:
+      - position
+      - velocity

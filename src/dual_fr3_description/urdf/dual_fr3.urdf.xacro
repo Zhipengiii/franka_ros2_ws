@@ -1,6 +1,11 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="dual_fr3_robot">
+  <xacro:include filename="$(find dual_fr3_description)/urdf/mr1000_macro.xacro"/>
+  <xacro:include filename="$(find franka_description)/robots/common/franka_arm.xacro" />
+  <xacro:include filename="$(find franka_description)/end_effectors/common/franka_hand.xacro" />
+  <xacro:include filename="$(find franka_description)/end_effectors/common/utils.xacro" />
 
+  <!-- 基座链接 -->
   <link name="world"/>
   <joint name="world_to_base" type="fixed">
     <parent link="world"/>
@@ -8,47 +13,77 @@
     <origin xyz="0 0 0" rpy="0 0 0"/>
   </joint>
 
-  <xacro:include filename="$(find dual_fr3_description)/urdf/mr1000_macro.xacro"/>
+  <xacro:mr1000_description_macro />
 
-  <joint name="left_fr3_fixed_joint" type="fixed">
+  <xacro:arg name="arm_id" default="fr3" />
+  <xacro:arg name="left_arm_prefix" default="left_" />
+  <xacro:arg name="right_arm_prefix" default="right_" />
+
+  <!-- 手动创建两个franka连接到base_link的joint，防止franka的urdf自动创建parent link -->
+  <joint name="$(arg left_arm_prefix)$(arg arm_id)_fixed_joint" type="fixed">
       <parent link="base_link" />
-      <child link="left_fr3_link0" />
+      <child link="$(arg left_arm_prefix)$(arg arm_id)_link0" />
       <origin xyz="0.153 0.06 0.9685" rpy="-1.5707963267949 -1.5707963267949 0" />
   </joint>
 
-  <joint name="right_fr3_fixed_joint" type="fixed">
+  <joint name="$(arg right_arm_prefix)$(arg arm_id)_fixed_joint" type="fixed">
       <parent link="base_link" />
-      <child link="right_fr3_link0" />
+      <child link="$(arg right_arm_prefix)$(arg arm_id)_link0" />
       <origin xyz="0.153 -0.06 0.9685" rpy="1.5707963267949 -1.5707963267949 0" />
   </joint>
-
-  <xacro:include filename="$(find franka_description)/robots/common/franka_robot.xacro"/>
   
-  <!-- 加载 YAML 配置 -->
-  <xacro:property name="joint_limits" value="${xacro.load_yaml('$(find franka_description)/robots/fr3/joint_limits.yaml')}" />
-  <xacro:property name="kinematics" value="${xacro.load_yaml('$(find franka_description)/robots/fr3/kinematics.yaml')}" />
-  <xacro:property name="inertials" value="${xacro.load_yaml('$(find franka_description)/robots/fr3/inertials.yaml')}" />
-  <xacro:property name="dynamics" value="${xacro.load_yaml('$(find franka_description)/robots/fr3/dynamics.yaml')}" />
-  <xacro:property name="accelerometer_config" value="${xacro.load_yaml('$(find franka_description)/robots/fr3/accelerometers.yaml')}" />
+  <!-- 左臂 -->
+  <xacro:franka_arm
+      arm_id="$(arg arm_id)"
+      arm_prefix="$(arg left_arm_prefix)"
+      joint_limits="${xacro.load_yaml('$(find franka_description)/robots/$(arg arm_id)/joint_limits.yaml')}"
+      inertials="${xacro.load_yaml('$(find franka_description)/robots/$(arg arm_id)/inertials.yaml')}"
+      kinematics="${xacro.load_yaml('$(find franka_description)/robots/$(arg arm_id)/kinematics.yaml')}"
+      dynamics="${xacro.load_yaml('$(find franka_description)/robots/$(arg arm_id)/dynamics.yaml')}"
+      accelerometer_config="${xacro.load_yaml('$(find franka_description)/robots/$(arg arm_id)/accelerometers.yaml')}"
+      connected_to="" 
+      xyz='0.153 0.06 0.9685'
+      rpy='-1.5707963267949 -1.5707963267949 0'
+      gazebo="false">
+  </xacro:franka_arm>
 
-  <xacro:franka_robot arm_id="fr3"
-                      arm_prefix="left_"
-                      connected_to=""
-                      safety_distance="0.03"
-                      gazebo="false"
-                      joint_limits="${joint_limits}"
-                      kinematics="${kinematics}"
-                      inertials="${inertials}"
-                      dynamics="${dynamics}"/>
+  <!-- 右臂 -->
+  <xacro:franka_arm
+      arm_id="$(arg arm_id)"
+      arm_prefix="$(arg right_arm_prefix)"
+      joint_limits="${xacro.load_yaml('$(find franka_description)/robots/$(arg arm_id)/joint_limits.yaml')}"
+      inertials="${xacro.load_yaml('$(find franka_description)/robots/$(arg arm_id)/inertials.yaml')}"
+      kinematics="${xacro.load_yaml('$(find franka_description)/robots/$(arg arm_id)/kinematics.yaml')}"
+      dynamics="${xacro.load_yaml('$(find franka_description)/robots/$(arg arm_id)/dynamics.yaml')}"
+      accelerometer_config="${xacro.load_yaml('$(find franka_description)/robots/$(arg arm_id)/accelerometers.yaml')}"
+      connected_to="" 
+      xyz='0.153 -0.06 0.9685'
+      rpy='1.5707963267949 -1.5707963267949 0'
+      gazebo="false">
+  </xacro:franka_arm>
 
-  <xacro:franka_robot arm_id="fr3"
-                      arm_prefix="right_"
-                      connected_to=""
-                      safety_distance="0.03"
-                      gazebo="false"
-                      joint_limits="${joint_limits}"
-                      kinematics="${kinematics}"
-                      inertials="${inertials}"
-                      dynamics="${dynamics}"/>
+  <!-- 左手 -->
+  <xacro:franka_hand 
+    arm_id="$(arg arm_id)"
+    arm_prefix="$(arg left_arm_prefix)"
+    connected_to="$(arg left_arm_prefix)$(arg arm_id)_link8" 
+    ee_id="franka_hand_white"
+    ee_inertials="${xacro.load_yaml('$(find franka_description)/end_effectors/franka_hand/inertials.yaml')}"
+    xyz_ee='0 0 0.002'
+    rpy_ee='0 0 -0.785398163'
+    gazebo="false">
+  </xacro:franka_hand>
+
+  <!-- 右手 -->
+  <xacro:franka_hand
+    arm_id="$(arg arm_id)"
+    arm_prefix="$(arg right_arm_prefix)"
+    connected_to="$(arg right_arm_prefix)$(arg arm_id)_link8" 
+    ee_id="franka_hand_white"
+    ee_inertials="${xacro.load_yaml('$(find franka_description)/end_effectors/franka_hand/inertials.yaml')}"
+    xyz_ee='0 0 0.002'
+    rpy_ee='0 0 -0.785398163'
+    gazebo="false">
+  </xacro:franka_hand>
         
 </robot>

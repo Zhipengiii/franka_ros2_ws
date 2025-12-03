@@ -34,20 +34,13 @@
           rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
       </material>
     </visual>
-    <!-- <collision>
+    <collision>
       <origin
         xyz="0 0 0"
         rpy="0 0 0" />
       <geometry>
         <mesh
           filename="package://dual_fr3_description/meshes/base_link.STL" />
-      </geometry>
-    </collision> -->
-
-    <collision>
-      <origin xyz="0 0 0" rpy="0 0 0" /> 
-      <geometry>
-        <box size="0.8 0.6 0.3" /> 
       </geometry>
     </collision>
   </link>
@@ -81,7 +74,7 @@
           rgba="1 0.945098039215686 0.905882352941176 1" />
       </material>
     </visual>
-    <!-- <collision>
+    <collision>
       <origin
         xyz="0 0 0"
         rpy="0 0 0" />
@@ -89,18 +82,11 @@
         <mesh
           filename="package://dual_fr3_description/meshes/wheel_LF_link.STL" />
       </geometry>
-    </collision> -->
-
-    <collision>
-      <origin xyz="0 0 0" rpy="${pi/2} 0 0" /> 
-      <geometry>
-        <cylinder radius="0.1" length="0.05"/>
-      </geometry>
     </collision>
   </link>
   <joint
     name="wheel_LF_joint"
-    type="continuous">
+    type="fixed">
     <origin
       xyz="0.212 0.323100000000001 0"
       rpy="0 0 0" />
@@ -141,7 +127,7 @@
           rgba="1 0.945098039215686 0.905882352941176 1" />
       </material>
     </visual>
-    <!-- <collision>
+    <collision>
       <origin
         xyz="0 0 0"
         rpy="0 0 0" />
@@ -149,18 +135,11 @@
         <mesh
           filename="package://dual_fr3_description/meshes/wheel_LB_link.STL" />
       </geometry>
-    </collision> -->
-
-    <collision>
-      <origin xyz="0 0 0" rpy="${pi/2} 0 0" /> 
-      <geometry>
-        <cylinder radius="0.1" length="0.05"/>
-      </geometry>
     </collision>
   </link>
   <joint
     name="wheel_LB_joint"
-    type="continuous">
+    type="fixed">
     <origin
       xyz="-0.212 0.323099999999999 0"
       rpy="0 0 0" />
@@ -201,7 +180,7 @@
           rgba="1 0.945098039215686 0.905882352941176 1" />
       </material>
     </visual>
-    <!-- <collision>
+    <collision>
       <origin
         xyz="0 0 0"
         rpy="0 0 0" />
@@ -209,18 +188,11 @@
         <mesh
           filename="package://dual_fr3_description/meshes/wheel_RF_link.STL" />
       </geometry>
-    </collision> -->
-
-    <collision>
-      <origin xyz="0 0 0" rpy="${pi/2} 0 0" /> 
-      <geometry>
-        <cylinder radius="0.1" length="0.05"/>
-      </geometry>
     </collision>
   </link>
   <joint
     name="wheel_RF_joint"
-    type="continuous">
+    type="fixed">
     <origin
       xyz="0.212000000000003 -0.3231 0"
       rpy="0 0 0" />
@@ -261,7 +233,7 @@
           rgba="1 0.945098039215686 0.905882352941176 1" />
       </material>
     </visual>
-    <!-- <collision>
+    <collision>
       <origin
         xyz="0 0 0"
         rpy="0 0 0" />
@@ -269,18 +241,11 @@
         <mesh
           filename="package://dual_fr3_description/meshes/wheel_RB_link.STL" />
       </geometry>
-    </collision> -->
-
-    <collision>
-      <origin xyz="0 0 0" rpy="${pi/2} 0 0" /> 
-      <geometry>
-        <cylinder radius="0.1" length="0.05"/>
-      </geometry>
     </collision>
   </link>
   <joint
     name="wheel_RB_joint"
-    type="continuous">
+    type="fixed">
     <origin
       xyz="-0.211999999999997 -0.323100000000002 0"
       rpy="0 0 0" />
