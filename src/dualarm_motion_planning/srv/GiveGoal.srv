@@ -1,0 +1,6 @@
+int8 robotid
+float64[] qgoal # 存储包含所有路径点数据的数组(n_via * n_dof)
+float64 v_max
+float64 a_max
+---
+bool received

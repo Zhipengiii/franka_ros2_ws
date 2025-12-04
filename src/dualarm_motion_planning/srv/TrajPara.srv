@@ -1,0 +1,8 @@
+int8 robotid
+float64[] qgoal # 存储包含所有路径点数据 7 个为 1 个路径点 (第一行为初始构型)
+float64 v_max
+float64 a_max
+float64 slowfactor
+float64 delaytime
+---
+bool received

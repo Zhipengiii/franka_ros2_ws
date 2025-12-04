@@ -1,0 +1,80 @@
+#!/usr/bin/env python3
+
+import rclpy
+from rclpy.node import Node
+from dualarm_motion_planning.msg import TaskAction, TaskActionList
+import time
+
+class TaskSender(Node):
+    def __init__(self):
+        super().__init__('dual_arm_task_tester')
+        # 创建任务序列发布者
+        self.left_task_pub = self.create_publisher(TaskActionList, '/leftCoordTask', 10)
+        self.right_task_pub = self.create_publisher(TaskActionList, '/rightCoordTask', 10)
+
+    def send_task_sequence(self, pub, actions):
+        """发送任务序列到指定话题"""
+        task_list = TaskActionList()
+        task_list.actions = actions
+        pub.publish(task_list)
+        self.get_logger().info(f"已发送任务序列到 {pub.topic_name}")
+
+def main(args=None):
+    # 初始化ROS节点
+    rclpy.init(args=args)
+    node = TaskSender()
+    
+    # 等待连接 (简单延时，或者可以使用 wait_for_subscribers 逻辑)
+    time.sleep(1.0)
+    
+    # 定义左臂任务序列
+    left_tasks = [
+        TaskAction(
+            action_name="left_move",
+            target_position=[20.8611, -50.4554, -28.7709, -83.7987, 13.8719, -72.8875, 58.5331],
+            velocity=20.0, 
+            acceleration=100.0,
+            action_type=2  # 关节空间任务
+        ),
+        TaskAction(
+            action_name="left_move_to_position_1",
+            target_position=[-11.0336, 8.6739, 6.5590, 86.1513, -92.6897, -8.6731, 11.01523],
+            velocity=20.0,
+            acceleration=100.0,
+            action_type=2  # 关节空间任务
+        )
+    ]
+    
+    # 定义右臂任务序列
+    right_tasks = [
+        TaskAction(
+            action_name="right_move",
+            target_position=[-23.3877, 41.2373, 8.4295, 85.0399, -28.3595, 65.362, -82.1292],
+            velocity=20.0,
+            acceleration=100.0,
+            action_type=2  # 关节空间任务
+        ),
+        TaskAction(
+            action_name="right_move",
+            target_position=[25.9371, -14.0484, -17.4998, 104.0285, -86.5006, 14.0483, 46.3789],
+            velocity=20.0,
+            acceleration=100.0,
+            action_type=2  # 关节空间任务
+        )
+    ]
+    
+    # 发送任务序列
+    node.send_task_sequence(node.left_task_pub, left_tasks)
+    node.send_task_sequence(node.right_task_pub, right_tasks)
+    
+    # 保持节点运行
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()
+
+if __name__ == '__main__':
+    main()
