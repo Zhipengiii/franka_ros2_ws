@@ -40,37 +40,37 @@ def main(args=None):
     # 定义左臂任务序列
     left_tasks = [
         TaskAction(
-            action_name="left_move",
+            action_name="left_task1",
             target_position=[-1.174803, -0.747422, 2.845125, -1.633357, -2.742452, 2.361245, 1.647983],
             velocity=1.0, 
             acceleration=5.0,
             action_type=2  # 关节空间任务
         ),
-        # TaskAction(
-        #     action_name="left_move_to_position_1",
-        #     target_position=[-11.0336, 8.6739, 6.5590, 86.1513, -92.6897, -8.6731, 11.01523],
-        #     velocity=1.0,
-        #     acceleration=5.0,
-        #     action_type=2  # 关节空间任务
-        # )
+        TaskAction(
+            action_name="left_task2",
+            target_position=[-1.022599, -1.836047, 2.414729, -1.449909, -2.542112, 1.984310, 2.416757],
+            velocity=1.0,
+            acceleration=5.0,
+            action_type=2  # 关节空间任务
+        )
     ]
     
     # 定义右臂任务序列
     right_tasks = [
         TaskAction(
-            action_name="right_move",
+            action_name="right_task1",
             target_position=[-2.137347, 1.412162, 1.016419, -1.140118, 0.310286, 3.164228, -2.859364],
             velocity=1.0,
             acceleration=5.0,
             action_type=2  # 关节空间任务
         ),
-        # TaskAction(
-        #     action_name="right_move",
-        #     target_position=[25.9371, -14.0484, -17.4998, 104.0285, -86.5006, 14.0483, 46.3789],
-        #     velocity=1.0,
-        #     acceleration=5.0,
-        #     action_type=2  # 关节空间任务
-        # )
+        TaskAction(
+            action_name="right_task2",
+            target_position=[-1.777525, 1.637401, 0.001949, -1.079258, 0.509751, 2.899927, -1.525326],
+            velocity=1.0,
+            acceleration=5.0,
+            action_type=2  # 关节空间任务
+        )
     ]
     
     # 发送任务序列
