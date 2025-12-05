@@ -3,17 +3,17 @@
 initial_positions:
   left_fr3_finger_joint1: 0
   left_fr3_joint1: 0
-  left_fr3_joint2: 0
+  left_fr3_joint2: -0.78539815
   left_fr3_joint3: 0
-  left_fr3_joint4: -1.59695
+  left_fr3_joint4: -2.35619445
   left_fr3_joint5: 0
-  left_fr3_joint6: 2.5307
+  left_fr3_joint6: 1.5707963
   left_fr3_joint7: 0
   right_fr3_finger_joint1: 0
   right_fr3_joint1: 0
-  right_fr3_joint2: 0
+  right_fr3_joint2: -0.78539815
   right_fr3_joint3: 0
-  right_fr3_joint4: -1.59695
+  right_fr3_joint4: -2.35619445
   right_fr3_joint5: 0
-  right_fr3_joint6: 2.5307
+  right_fr3_joint6: 1.5707963
   right_fr3_joint7: 0

@@ -27,40 +27,50 @@ def main(args=None):
     # 等待连接 (简单延时，或者可以使用 wait_for_subscribers 逻辑)
     time.sleep(1.0)
     
+    '''
+        定义任务序列
+        每个任务包括：
+        - action_name: 任务名称
+        - target_position: 目标位置（关节空间为关节角度列表（单位：弧度），笛卡尔空间为位姿列表）
+        - velocity: 最大速度（单位：弧度/秒）
+        - acceleration: 最大加速度（单位：弧度/秒²）
+        - action_type: 任务类型（0: 笛卡尔空间, 1: 直线空间, 2: 关节空间）
+    '''
+
     # 定义左臂任务序列
     left_tasks = [
         TaskAction(
             action_name="left_move",
-            target_position=[20.8611, -50.4554, -28.7709, -83.7987, 13.8719, -72.8875, 58.5331],
-            velocity=20.0, 
-            acceleration=100.0,
+            target_position=[-1.174803, -0.747422, 2.845125, -1.633357, -2.742452, 2.361245, 1.647983],
+            velocity=1.0, 
+            acceleration=5.0,
             action_type=2  # 关节空间任务
         ),
-        TaskAction(
-            action_name="left_move_to_position_1",
-            target_position=[-11.0336, 8.6739, 6.5590, 86.1513, -92.6897, -8.6731, 11.01523],
-            velocity=20.0,
-            acceleration=100.0,
-            action_type=2  # 关节空间任务
-        )
+        # TaskAction(
+        #     action_name="left_move_to_position_1",
+        #     target_position=[-11.0336, 8.6739, 6.5590, 86.1513, -92.6897, -8.6731, 11.01523],
+        #     velocity=1.0,
+        #     acceleration=5.0,
+        #     action_type=2  # 关节空间任务
+        # )
     ]
     
     # 定义右臂任务序列
     right_tasks = [
         TaskAction(
             action_name="right_move",
-            target_position=[-23.3877, 41.2373, 8.4295, 85.0399, -28.3595, 65.362, -82.1292],
-            velocity=20.0,
-            acceleration=100.0,
+            target_position=[-2.137347, 1.412162, 1.016419, -1.140118, 0.310286, 3.164228, -2.859364],
+            velocity=1.0,
+            acceleration=5.0,
             action_type=2  # 关节空间任务
         ),
-        TaskAction(
-            action_name="right_move",
-            target_position=[25.9371, -14.0484, -17.4998, 104.0285, -86.5006, 14.0483, 46.3789],
-            velocity=20.0,
-            acceleration=100.0,
-            action_type=2  # 关节空间任务
-        )
+        # TaskAction(
+        #     action_name="right_move",
+        #     target_position=[25.9371, -14.0484, -17.4998, 104.0285, -86.5006, 14.0483, 46.3789],
+        #     velocity=1.0,
+        #     acceleration=5.0,
+        #     action_type=2  # 关节空间任务
+        # )
     ]
     
     # 发送任务序列

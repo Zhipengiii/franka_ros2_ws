@@ -239,10 +239,10 @@ private:
             Task task;
             task.action_name = action.action_name;
             for (size_t i = 0; i < action.target_position.size(); ++i) {
-                task.goal_data.push_back(action.target_position[i] * PI / 180.0);
+                task.goal_data.push_back(action.target_position[i]);
             }
-            task.v_max = action.velocity * PI / 180.0;
-            task.a_max = action.acceleration * PI / 180.0;
+            task.v_max = action.velocity;
+            task.a_max = action.acceleration;
             task.action_type = static_cast<ActionType>(action.action_type);
             left_arm_tasks_.push_back(task);
         }
@@ -261,10 +261,10 @@ private:
             Task task;
             task.action_name = action.action_name;
             for (size_t i = 0; i < action.target_position.size(); ++i) {
-                task.goal_data.push_back(action.target_position[i] * PI / 180.0);
+                task.goal_data.push_back(action.target_position[i]);
             }
-            task.v_max = action.velocity * PI / 180.0;
-            task.a_max = action.acceleration * PI / 180.0;
+            task.v_max = action.velocity;
+            task.a_max = action.acceleration;
             task.action_type = static_cast<ActionType>(action.action_type);
             right_arm_tasks_.push_back(task);
         }
