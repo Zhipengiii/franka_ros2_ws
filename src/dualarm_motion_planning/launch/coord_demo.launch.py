@@ -35,7 +35,7 @@ def generate_launch_description():
         DeclareLaunchArgument('collision_detection_sample_time', default_value='0.05'),
         DeclareLaunchArgument('n_dof', default_value='7'),
         DeclareLaunchArgument('offline_replanning_mode', default_value='1'),
-        DeclareLaunchArgument('collision_threshold', default_value='0.09'),
+        DeclareLaunchArgument('collision_threshold', default_value='0.1'),
         DeclareLaunchArgument('v_max', default_value='0.5'),
         DeclareLaunchArgument('a_max', default_value='2.0'),
         DeclareLaunchArgument('joint_tolerance', default_value='0.001'),

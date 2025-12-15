@@ -33,7 +33,7 @@ public:
         // 1. 声明并获取参数
         this->declare_parameter<double>("sample_time", 0.01);
         this->declare_parameter<int>("n_dof", 7);
-        this->declare_parameter<double>("joint_tolerance", 1e-4);
+        this->declare_parameter<double>("joint_tolerance", 0.0001);
         this->declare_parameter<int>("robot_id", 1);
         this->declare_parameter<std::string>("action_name", "joint_trajectory_controller/follow_joint_trajectory");
         this->declare_parameter<std::vector<std::string>>("joint_names", std::vector<std::string>({}));
@@ -219,7 +219,7 @@ private:
         }
 
         // 发送 Goal
-        RCLCPP_INFO(this->get_logger(), "Sending goal with %zu points...", goal.trajectory.points.size());
+        // RCLCPP_INFO(this->get_logger(), "Sending goal with %zu points...", goal.trajectory.points.size());
         
         auto send_goal_options = rclcpp_action::Client<FollowJointTrajectory>::SendGoalOptions();
         

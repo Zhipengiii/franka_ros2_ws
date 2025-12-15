@@ -18,40 +18,6 @@ PathPlanner::PathPlanner(rclcpp::Node::SharedPtr node, const std::string& group_
     RCLCPP_INFO(node_->get_logger(), "PathPlanner initialized for group: %s", group_name.c_str());
 }
 
-// 添加障碍物函数
-void PathPlanner::addObstacle(const std::string& name, double x, double y, double z, double length, double width, double height)
-{
-    moveit_msgs::msg::CollisionObject collision_object;
-    collision_object.header.frame_id = "base_link"; // 假设基座系名称为 base_link
-    collision_object.id = name;
-
-    // 设置盒子的尺寸
-    shape_msgs::msg::SolidPrimitive primitive;
-    primitive.type = shape_msgs::msg::SolidPrimitive::BOX;
-    primitive.dimensions.resize(3);
-    primitive.dimensions[0] = length;  // x方向长度
-    primitive.dimensions[1] = width;   // y方向宽度
-    primitive.dimensions[2] = height;  // z方向高度
-
-    // 设置盒子的位置和朝向
-    geometry_msgs::msg::Pose box_pose;
-    box_pose.orientation.w = 1.0; // 默认朝向
-    box_pose.position.x = x;
-    box_pose.position.y = y;
-    box_pose.position.z = z;
-
-    collision_object.primitives.push_back(primitive);
-    collision_object.primitive_poses.push_back(box_pose);
-    collision_object.operation = collision_object.ADD;
-
-    // 添加障碍物到规划场景
-    std::vector<moveit_msgs::msg::CollisionObject> collision_objects;
-    collision_objects.push_back(collision_object);
-    planning_scene_.applyCollisionObjects(collision_objects);
-    
-    RCLCPP_INFO(node_->get_logger(), "Added obstacle: %s at (%.2f, %.2f, %.2f)", name.c_str(), x, y, z);
-}
-
 // 规划关节空间路径
 moveit::planning_interface::MoveGroupInterface::Plan PathPlanner::planJointSpacePath(const std::vector<double>& target_joint_values, 
                                                                         const std::vector<double>& current_joint_values)

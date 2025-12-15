@@ -7,6 +7,7 @@
 #include <string>
 #include <fstream>
 #include <iostream>
+#include <cmath>
 #include "collision_detection.h"  
 #include "path_planner.h"
 #include <ament_index_cpp/get_package_share_directory.hpp>
@@ -16,19 +17,13 @@
 class DualArmCoordinator 
 {
 public:
-    // 存储生成的轨迹数据文件的相对路径
-    std::string package_path;
-
-    // 阻塞标志
+    std::string package_path; // 存储生成的轨迹数据文件的相对路径
     bool deadlock_flag = false; // 阻塞状态标志
     bool diag_collision_flag = false; // 对角线碰撞标志
-
-    // 协调因子和优先级标志
-    bool prior_r1_ = false;
+    bool prior_r1_ = false; // 协调因子和优先级标志
     bool prior_r2_ = false;
     double delay_time_r1_ = 0.0;
     double delay_time_r2_ = 0.0;
-
     moveit::planning_interface::MoveGroupInterface::Plan plan; // 路径重规划结果
 
     // 定义导致阻塞的冲突机器人
@@ -65,10 +60,14 @@ private:
     int sample_size_max_;           // 最大采样点数
     double sample_time_;            // 采样时间间隔
 
+    const double ARC_LENGTH_THRESHOLD = 0.25; // 标称轨迹弧长（反应机械臂移动距离）(单位：米) -> 碰撞阈值的2.5倍
+    // 存储计算出的笛卡尔空间弧长
+    double r1_arc_length_ = 0.0;
+    double r2_arc_length_ = 0.0;
+    
     // 定义机器人包含的连杆名称
     std::vector<std::string> r1_links;
     std::vector<std::string> r2_links;
-
     // 定义机器人规划组名称
     std::string r1_group_name;
     std::string r2_group_name;
@@ -84,12 +83,14 @@ private:
     void generateCollisionMatrix(const Eigen::MatrixXd& cartesian_r1, const Eigen::MatrixXd& cartesian_r2); // 生成碰撞矩阵函数
     void generateCollisionBoundaries(); // 生成碰撞边界矩阵函数
     void generateCollisionMatrixVector(); // 生成碰撞矩阵向量函数
-    void determinePriorityAndDeadlock(); // 确定优先级和死锁状态函数
+    void determinePriorityAndDeadlock(); // 确定优先级和阻塞状态函数
     void calculateCoordFactors(); // 计算协调因子函数
     bool isDiagCollision(); // 检查碰撞矩阵对角线是否有碰撞函数
-    void determineBlockingConflictR(); // 确定导致死锁的冲突机器人
-    void blockingReplanning(const PathTrackingPlanning::Trajectory& trajectory_r1, 
+    double calculateCartesianArcLength(const Eigen::MatrixXd& cartesian_data); // 计算笛卡尔轨迹弧长
+    void determineBlockingConflictR(); // 确定导致阻塞的冲突机器人
+    bool blockingReplanning(const PathTrackingPlanning::Trajectory& trajectory_r1, 
                             const PathTrackingPlanning::Trajectory& trajectory_r2); // 阻塞重规划函数
+    
 };
 
 #endif // DUAL_ARM_COORDINATOR_H

@@ -5,8 +5,6 @@
 #include <geometry_msgs/msg/pose.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include <tf2/LinearMath/Quaternion.h>
-
-// [修改] 消息和服务头文件路径变化
 #include "dualarm_motion_planning/srv/give_goal.hpp"
 #include "dualarm_motion_planning/msg/task_action.hpp"
 #include "dualarm_motion_planning/msg/task_action_list.hpp"
@@ -68,18 +66,6 @@ public:
         current_left_joints_.resize(n_dof_, 0.0);
         current_right_joints_.resize(n_dof_, 0.0);
         joints_received_ = false;
-
-        // // 确定包路径
-        // std::string source_dir = PACKAGE_SOURCE_DIR;
-        // if (!source_dir.empty()) {
-        //     package_path_ = source_dir;
-        // } else {
-        //     try {
-        //         package_path_ = ament_index_cpp::get_package_share_directory("dualarm_motion_planning");
-        //     } catch (...) {
-        //         package_path_ = ".";
-        //     }
-        // }
 
         // 2. 初始化发布者
         left_hand_pub_ = this->create_publisher<std_msgs::msg::Int32MultiArray>("/left_hand_control", 10);

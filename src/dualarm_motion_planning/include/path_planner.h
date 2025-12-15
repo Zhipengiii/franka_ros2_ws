@@ -17,9 +17,6 @@ public:
     // 构造函数，初始化 MoveGroupInterface 和其他参数
     PathPlanner(rclcpp::Node::SharedPtr node, const std::string& group_name);
 
-    // 添加障碍物，输入参数 : 名称， 位置， 尺寸
-    void addObstacle(const std::string& name, double x, double y, double z, double length, double width, double height);
-
     // 规划关节空间路径， 输入参数 ： 规划组名称， 目标关节角度
     moveit::planning_interface::MoveGroupInterface::Plan planJointSpacePath(const std::vector<double>& target_joint_values, 
                                                                             const std::vector<double>& current_joint_values);

@@ -113,7 +113,7 @@ public:
         kinematic_state_->setToDefaultValues();
         joint_model_group_left_ = kinematic_model_->getJointModelGroup(r1_group_name);
         joint_model_group_right_ = kinematic_model_->getJointModelGroup(r2_group_name);
-        RCLCPP_INFO(this->get_logger(), "Robot Model Initialized.");
+        RCLCPP_INFO(this->get_logger(), "机器人模型初始化完成.");
     }
 
     void run()
@@ -146,6 +146,7 @@ public:
                     // 发生碰撞，但未阻塞
                     if (!coordinator.deadlock_flag)
                     {
+                        coordinator.saveCollisionMatrix(package_path + "/data/collision_matrix_non_blocking.txt");
                         update_coord_result(coordinator);
                         if (offline_replanning_mode == 1) printCoordinationResult();
                         sendTrajectoryParameters();
@@ -347,7 +348,6 @@ private:
                     q_path_r1(i, j) = coordinator.plan.trajectory_.joint_trajectory.points[i].positions[j];
 
             generate_collision_samples(LEFT_ARM);
-            coordinator.saveCollisionMatrix(package_path + "/data/collision_matrix_replanning_r1.txt");
         }
         else
         {
@@ -358,7 +358,6 @@ private:
                     q_path_r2(i, j) = coordinator.plan.trajectory_.joint_trajectory.points[i].positions[j];
 
             generate_collision_samples(RIGHT_ARM);
-            coordinator.saveCollisionMatrix(package_path + "/data/collision_matrix_replanning_r2.txt");
         }
 
         // 重新协调
@@ -369,6 +368,10 @@ private:
         DualArmCoordinator new_coordinator(shared_from_this(), collision_threshold, sample_size_max, collision_detection_sample_time
                                           , r1_links, r2_links, r1_group_name, r2_group_name);
         new_coordinator.coordinate(position_cartesian_r1, position_cartesian_r2, trajectory_r1, trajectory_r2);
+
+        std::string re_co_matrix_path = (conflict_arm_type == LEFT_ARM) ? "/data/collision_matrix_replanning_r1.txt" 
+                                                                        : "/data/collision_matrix_replanning_r2.txt";
+        new_coordinator.saveCollisionMatrix(package_path + re_co_matrix_path);
 
         if (!new_coordinator.deadlock_flag)
         {
@@ -411,8 +414,8 @@ private:
         auto future1 = left_traj_client_->async_send_request(req1);
         auto future2 = right_traj_client_->async_send_request(req2);
 
-        if (future1.wait_for(1s) == std::future_status::timeout || 
-            future2.wait_for(1s) == std::future_status::timeout)
+        if (future1.wait_for(3s) == std::future_status::timeout || 
+            future2.wait_for(3s) == std::future_status::timeout)
         {
             RCLCPP_WARN(this->get_logger(), "服务调用超时");
         }
