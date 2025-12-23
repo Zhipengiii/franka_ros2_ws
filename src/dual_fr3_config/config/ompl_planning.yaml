@@ -1,0 +1,69 @@
+# ompl_planning.yaml
+# 该文件定义了 OMPL 规划器的核心算法及采样参数
+
+planning_plugins:
+  - ompl_interface/OMPLPlanner
+request_adapters:
+  - default_planner_request_adapters/AddTimeOptimalParameterization
+  - default_planner_request_adapters/ResolveConstraintFrames
+  - default_planner_request_adapters/FixWorkspaceBounds
+  - default_planner_request_adapters/FixStartStateBounds
+  - default_planner_request_adapters/FixStartStateCollision
+  - default_planner_request_adapters/FixStartStatePathConstraints
+start_state_max_bounds_error: 0.1
+
+# 规划组配置：必须与您的 SRDF 定义一致（即 left_arm 和 right_arm）
+left_arm:
+  planner_configs:
+    - SBLkConfigDefault
+    - ESTkConfigDefault
+    - LBPIVkConfigDefault
+    - BKPIVkConfigDefault
+    - KPIVkConfigDefault
+    - RRTkConfigDefault
+    - RRTConnectkConfigDefault
+    - RRTstarkConfigDefault
+    - TRRTkConfigDefault
+    - PRMkConfigDefault
+    - PRMstarkConfigDefault
+    - BiESTkConfigDefault
+  # 【关键】减小碰撞检测步长。默认 0.01 对双臂间缝隙可能过大。
+  # 设为 0.005 或更小能显著提高在窄缝中的规划成功率
+  longest_valid_segment_fraction: 0.005
+  # 【关键】投影评估器：帮助算法在 7 自由度空间进行有效降维采样，推荐使用前两个关节
+  projection_evaluator: joints(left_fr3_joint1,left_fr3_joint2)
+  enforce_joint_model_state_space: true
+
+right_arm:
+  planner_configs:
+    - SBLkConfigDefault
+    - ESTkConfigDefault
+    - LBPIVkConfigDefault
+    - BKPIVkConfigDefault
+    - KPIVkConfigDefault
+    - RRTkConfigDefault
+    - RRTConnectkConfigDefault
+    - RRTstarkConfigDefault
+    - TRRTkConfigDefault
+    - PRMkConfigDefault
+    - PRMstarkConfigDefault
+    - BiESTkConfigDefault
+  longest_valid_segment_fraction: 0.005
+  projection_evaluator: joints(right_fr3_joint1,right_fr3_joint2)
+  enforce_joint_model_state_space: true
+
+# 算法具体参数配置
+BiESTkConfigDefault:
+  type: geometric::BiEST
+  # 限制单步扩展范围，对于受限空间建议减小
+  range: 0.1
+
+RRTstarkConfigDefault:
+  type: geometric::RRTstar
+  range: 0.1
+  goal_bias: 0.05
+  delay_collision_checking: 1
+
+RRTConnectkConfigDefault:
+  type: geometric::RRTConnect
+  range: 0.1
