@@ -34,7 +34,6 @@ def generate_launch_description():
         DeclareLaunchArgument('sample_time', default_value='0.001'),
         DeclareLaunchArgument('collision_detection_sample_time', default_value='0.05'),
         DeclareLaunchArgument('n_dof', default_value='7'),
-        DeclareLaunchArgument('offline_replanning_mode', default_value='1'),
         DeclareLaunchArgument('collision_threshold', default_value='0.1'),
         DeclareLaunchArgument('v_max', default_value='0.5'),
         DeclareLaunchArgument('a_max', default_value='2.0'),
@@ -114,7 +113,6 @@ def generate_launch_description():
             {
                 'robot_description': robot_description_content,
                 'robot_description_semantic': robot_description_semantic_content,
-                'offline_replanning_mode': LaunchConfiguration('offline_replanning_mode'),
                 'collision_threshold': LaunchConfiguration('collision_threshold'),
                 'collision_detection_sample_time': LaunchConfiguration('collision_detection_sample_time'),
                 'n_dof': n_dof,
@@ -122,30 +120,32 @@ def generate_launch_description():
                 'r1_group_name': r1_group_name, 
                 'r2_group_name': r2_group_name,
                 'r1_arm_links': r1_arm_links, # 运动链连杆
-                'r2_arm_links': r2_arm_links
+                'r2_arm_links': r2_arm_links,
+                'left_joint_names': r1_joint_names_list,
+                'right_joint_names': r2_joint_names_list
             }
         ]
     )
 
-    # 任务分发节点
-    task_distribution_node = Node(
-        package='dualarm_motion_planning',
-        executable='task_distribution',
-        name='task_distribution_node',
-        output='screen',
-        parameters=[{
-            'v_max': LaunchConfiguration('v_max'),
-            'a_max': LaunchConfiguration('a_max'),
-            'n_dof': n_dof,
-            'joint_tolerance': joint_tolerance,
-            'left_joint_names': r1_joint_names_list,
-            'right_joint_names': r2_joint_names_list
-        }]
-    )
+    # # 任务分发节点
+    # task_distribution_node = Node(
+    #     package='dualarm_motion_planning',
+    #     executable='task_distribution',
+    #     name='task_distribution_node',
+    #     output='screen',
+    #     parameters=[{
+    #         'v_max': LaunchConfiguration('v_max'),
+    #         'a_max': LaunchConfiguration('a_max'),
+    #         'n_dof': n_dof,
+    #         'joint_tolerance': joint_tolerance,
+    #         'left_joint_names': r1_joint_names_list,
+    #         'right_joint_names': r2_joint_names_list
+    #     }]
+    # )
 
     return LaunchDescription(declared_arguments + [
         control_r1,
         control_r2,
         coord_node,
-        task_distribution_node
+        # task_distribution_node
     ])

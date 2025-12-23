@@ -65,7 +65,7 @@ target_link_libraries(${PROJECT_NAME}_lib "${cpp_typesupport_target}")
 # 7. 编译可执行文件
 add_executable(control src/control.cpp)
 add_executable(coord_node src/coord_node.cpp)
-add_executable(task_distribution src/task_distribution.cpp)
+# add_executable(task_distribution src/task_distribution.cpp)
 
 # 为可执行文件添加依赖
 ament_target_dependencies(control 
@@ -98,25 +98,25 @@ ament_target_dependencies(coord_node
   ament_index_cpp 
 )
 
-ament_target_dependencies(task_distribution 
-  rclcpp
-  rclcpp_action
-  moveit_ros_planning_interface
-  moveit_core
-  geometry_msgs
-  std_msgs
-  tf2_geometry_msgs
-  tf2_ros
-  control_msgs
-  trajectory_msgs
-  sensor_msgs
-  ament_index_cpp 
-)
+# ament_target_dependencies(task_distribution 
+#   rclcpp
+#   rclcpp_action
+#   moveit_ros_planning_interface
+#   moveit_core
+#   geometry_msgs
+#   std_msgs
+#   tf2_geometry_msgs
+#   tf2_ros
+#   control_msgs
+#   trajectory_msgs
+#   sensor_msgs
+#   ament_index_cpp 
+# )
 
 # 链接生成的库
 target_link_libraries(control ${PROJECT_NAME}_lib)
 target_link_libraries(coord_node ${PROJECT_NAME}_lib)
-target_link_libraries(task_distribution ${PROJECT_NAME}_lib)
+# target_link_libraries(task_distribution ${PROJECT_NAME}_lib)
 # 传入源码路径宏
 target_compile_definitions(control PRIVATE PACKAGE_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 target_compile_definitions(coord_node PRIVATE PACKAGE_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
@@ -132,7 +132,7 @@ install(TARGETS
 # 9. 安装可执行文件
 install(TARGETS control DESTINATION lib/${PROJECT_NAME})
 install(TARGETS coord_node DESTINATION lib/${PROJECT_NAME})
-install(TARGETS task_distribution DESTINATION lib/${PROJECT_NAME})
+# install(TARGETS task_distribution DESTINATION lib/${PROJECT_NAME})
 
 # 安装 Launch 文件
 install(DIRECTORY launch
@@ -140,7 +140,11 @@ install(DIRECTORY launch
 )
 
 # 安装 Python 脚本 (以便使用 ros2 run dualarm_motion_planning task_sequence.py 运行)
-install(PROGRAMS scripts/task_sequence.py
+# install(PROGRAMS scripts/task_sequence.py
+#   DESTINATION lib/${PROJECT_NAME}
+# )
+
+install(PROGRAMS scripts/task_pub.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

@@ -32,14 +32,23 @@ enum ActionType
     CARTESIAN_SPACE = 3   // 笛卡尔空间位置
 };
 
+// 定义任务干涉类型
+enum TaskType
+{
+    FREE = 1,               // 无干涉
+    COLLISION_NO_BLOCK = 2, // 有干涉但无阻塞
+    BLOCKING = 3            // 发生阻塞
+};
+
 // 定义任务结构体
 struct Task 
 {
-    std::string action_name; // 动作名称
+    std::string experiment_id; // 实验ID
     std::vector<double> goal_data;  // 目标数据
     double v_max; 
     double a_max; 
     ActionType action_type;  
+    TaskType task_type;
 };
 
 class TaskDistributionNode : public rclcpp::Node
@@ -223,7 +232,7 @@ private:
         for (const auto& action : msg->actions) 
         {
             Task task;
-            task.action_name = action.action_name;
+            task.experiment_id = action.experiment_id;
             for (size_t i = 0; i < action.target_position.size(); ++i) {
                 task.goal_data.push_back(action.target_position[i]);
             }
@@ -245,7 +254,7 @@ private:
         for (const auto& action : msg->actions) 
         {
             Task task;
-            task.action_name = action.action_name;
+            task.experiment_id = action.experiment_id;
             for (size_t i = 0; i < action.target_position.size(); ++i) {
                 task.goal_data.push_back(action.target_position[i]);
             }

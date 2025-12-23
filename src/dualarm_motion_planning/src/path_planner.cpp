@@ -5,45 +5,57 @@ PathPlanner::PathPlanner(rclcpp::Node::SharedPtr node, const std::string& group_
     : node_(node),
       move_group_(node, group_name)
 {
-    // 在 ROS 2 中，通常通过 move_group 直接获取 RobotModel，无需单独构建 Loader
     kinematic_model_ = move_group_.getRobotModel();
     kinematic_state_ = std::make_shared<moveit::core::RobotState>(kinematic_model_);
 
-    move_group_.setPlanningTime(3.0);
-    move_group_.setNumPlanningAttempts(10);
+    // --- 核心优化 1: 算法与时限配置 ---
+    // 强制指定使用针对窄缝优化的 BiEST 算法 (对应 ompl_planning.yaml 中的配置)
+    move_group_.setPlannerId("BiESTkConfigDefault"); 
     
+    // 增加单次规划的最大允许时间 (秒)
+    move_group_.setPlanningTime(15.0);        
+    
+    // 增加尝试次数，随机化采样算法在尝试次数越多时成功率越高
+    move_group_.setNumPlanningAttempts(20);   
+
+    // --- 核心优化 2: 容差微调 ---
+    // 适当放大目标容差（弧度/米），有助于在受限空间内更快找到可行解
+    move_group_.setGoalJointTolerance(0.001);
+    move_group_.setGoalPositionTolerance(0.001);
+    move_group_.setGoalOrientationTolerance(0.01);
+
     joint_model_group_ = kinematic_model_->getJointModelGroup(group_name);
     kinematic_state_->setToDefaultValues();
     
-    RCLCPP_INFO(node_->get_logger(), "PathPlanner initialized for group: %s", group_name.c_str());
+    RCLCPP_INFO(node_->get_logger(), "已为规划组 [%s] 初始化路径规划器", group_name.c_str());
 }
 
 // 规划关节空间路径
 moveit::planning_interface::MoveGroupInterface::Plan PathPlanner::planJointSpacePath(const std::vector<double>& target_joint_values, 
                                                                         const std::vector<double>& current_joint_values)
 {
-    // 设置起始状态
+    // 设置规划起始点为机械臂当前实际位置
+    move_group_.setStartStateToCurrentState();
+    
     moveit::core::RobotState start_state(*move_group_.getCurrentState());
     start_state.setJointGroupPositions(joint_model_group_, current_joint_values);
     move_group_.setStartState(start_state);
 
-    // 设置目标关节角度
+    // 设置目标位置
     move_group_.setJointValueTarget(target_joint_values);
 
-    // 规划
-    moveit::planning_interface::MoveGroupInterface::Plan my_plan;
-    auto success = move_group_.plan(my_plan);
+    // 执行规划
+    moveit::planning_interface::MoveGroupInterface::Plan plan;
+    moveit::core::MoveItErrorCode code = move_group_.plan(plan);
+    bool success = (code == moveit::core::MoveItErrorCode::SUCCESS);
 
-    if (success == moveit::core::MoveItErrorCode::SUCCESS)
-    {
-        RCLCPP_INFO(node_->get_logger(), "Joint space planning succeeded");
-    }
-    else
-    {
-        RCLCPP_WARN(node_->get_logger(), "Joint space planning failed");
+    if (success) {
+        RCLCPP_INFO(node_->get_logger(), "路径规划成功! 轨迹点数: %zu", plan.trajectory_.joint_trajectory.points.size());
+    } else {
+        RCLCPP_ERROR(node_->get_logger(), "路径规划失败! 错误码: %d. 请确认是否存在物理死锁或碰撞步长过大。", code.val);
     }
 
-    return my_plan;
+    return plan;
 }
 
 // 规划笛卡尔空间路径

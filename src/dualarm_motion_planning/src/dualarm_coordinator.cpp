@@ -419,11 +419,13 @@ bool DualArmCoordinator::blockingReplanning(const PathTrackingPlanning::Trajecto
 
         std::vector<std::string> r1_collision_links = {r1_links[r1_links.size()-1]};
         path_planner_r1.addConflictObstacle(obstacle_r1, r1_collision_links, 
-                                            0.5*collision_threshold_, 0.5*collision_threshold_, 0.5*collision_threshold_);
+                                            obstacle_inflation_factor*collision_threshold_, 
+                                            obstacle_inflation_factor*collision_threshold_, 
+                                            obstacle_inflation_factor*collision_threshold_);
 
         // 规划
         plan = path_planner_r1.planJointSpacePath(end_r1, start_r1);
-        path_planner_r1.clearConflictObstacles(); // 无论成功失败都清理
+        path_planner_r1.clearConflictObstacles(); 
 
         if (!plan.trajectory_.joint_trajectory.points.empty()) 
         {
@@ -457,7 +459,9 @@ bool DualArmCoordinator::blockingReplanning(const PathTrackingPlanning::Trajecto
 
         std::vector<std::string> r2_collision_links = {r2_links[r2_links.size()-1]};
         path_planner_r2.addConflictObstacle(obstacle_r2, r2_collision_links, 
-                                            0.5*collision_threshold_, 0.5*collision_threshold_, 0.5*collision_threshold_);
+                                            obstacle_inflation_factor*collision_threshold_, 
+                                            obstacle_inflation_factor*collision_threshold_, 
+                                            obstacle_inflation_factor*collision_threshold_);
 
         plan = path_planner_r2.planJointSpacePath(end_r2, start_r2);
         path_planner_r2.clearConflictObstacles();
@@ -647,6 +651,26 @@ std::pair<int, int> DualArmCoordinator::getMaxCollisionCol()
     //           << "], Center: " << center_idx << std::endl;
 
     return critical_conflict_col;
+}
+
+// 记录实验结果到 CSV 文件
+void DualArmCoordinator::logExperimentResult(bool success, double time_ms) {
+    std::string csv_path = package_path + "/data/blocking_experiment_results.csv";
+    std::ofstream file(csv_path, std::ios::app);
+    if (file.is_open()) {
+        file.seekp(0, std::ios::end);
+        if (file.tellp() == 0) {
+            file << "ID,Type,Collision,Blocking,Active_Agent,Replan_Success,Time_ms,Result\n";
+        }
+        file << exp_id_ << "," << task_type_ << ","
+             << (diag_collision_flag ? "1" : "0") << ","
+             << (deadlock_flag ? "1" : "0") << ","
+             << (blocking_conflict_r == CONFLICT_R1 ? "R1" : "R2") << ","
+             << (success ? "1" : "0") << ","
+             << time_ms << ","
+             << (success ? "SUCCESS" : "FAILED") << "\n";
+        file.close();
+    }
 }
 
 // 核心协调流程，加入反馈重试逻辑

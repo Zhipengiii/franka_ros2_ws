@@ -42,7 +42,6 @@ public:
     CoordNode() : Node("coord_node")
     {
         // 1. 声明参数
-        this->declare_parameter<int>("offline_replanning_mode", 1);
         this->declare_parameter<double>("collision_threshold", 0.05);
         this->declare_parameter<int>("n_dof", 7);
         this->declare_parameter<double>("collision_detection_sample_time", 0.01);
@@ -51,9 +50,10 @@ public:
         this->declare_parameter<std::string>("r2_group_name", "right_arm");
         this->declare_parameter<std::vector<std::string>>("r1_arm_links", std::vector<std::string>({}));
         this->declare_parameter<std::vector<std::string>>("r2_arm_links", std::vector<std::string>({}));
+        this->declare_parameter<std::vector<std::string>>("left_joint_names", std::vector<std::string>());
+        this->declare_parameter<std::vector<std::string>>("right_joint_names", std::vector<std::string>());
 
         // 2. 获取参数
-        this->get_parameter("offline_replanning_mode", offline_replanning_mode);
         this->get_parameter("collision_threshold", collision_threshold);
         this->get_parameter("n_dof", n_dof);
         this->get_parameter("collision_detection_sample_time", collision_detection_sample_time);
@@ -61,6 +61,8 @@ public:
         this->get_parameter("r2_group_name", r2_group_name);
         this->get_parameter("r1_arm_links", r1_links);
         this->get_parameter("r2_arm_links", r2_links);
+        this->get_parameter("left_joint_names", left_joint_names_);
+        this->get_parameter("right_joint_names", right_joint_names_);
         std::vector<int64_t> id_pair;
         this->get_parameter("robot_id_pair", id_pair);
         if(id_pair.size() == 2) {
@@ -69,37 +71,33 @@ public:
 
         // 3. 确定包路径
         std::string source_dir = PACKAGE_SOURCE_DIR;
-        if (!source_dir.empty()) {
-            package_path = source_dir;
-            RCLCPP_INFO(this->get_logger(), "Using source directory for data: %s", package_path.c_str());
-        } else {
-            try {
-                package_path = ament_index_cpp::get_package_share_directory("dualarm_motion_planning");
-                RCLCPP_INFO(this->get_logger(), "Using install directory for data: %s", package_path.c_str());
-            } catch (const std::exception& e) {
-                RCLCPP_ERROR(this->get_logger(), "Failed to locate package: %s", e.what());
-                package_path = ".";
-            }
-        }
+        package_path = source_dir.empty() ? ament_index_cpp::get_package_share_directory("dualarm_motion_planning") : source_dir;
+
         // 创建 data 目录
         std::string data_dir = package_path + "/data";
         if (!std::filesystem::exists(data_dir)) {
             std::filesystem::create_directories(data_dir);
         }
 
-        // 4. 初始化服务
+        // 4. 订阅 JointState
+        joint_state_sub_ = this->create_subscription<sensor_msgs::msg::JointState>(
+            "/joint_states", 10, std::bind(&CoordNode::joint_state_callback, this, std::placeholders::_1));
+
+        // 5. 初始化服务
         std::string service_name = "give_goal_" + std::to_string(robot_id_pair[0]) + "_" + std::to_string(robot_id_pair[1]);
         service_getgoal_ = this->create_service<dualarm_motion_planning::srv::GiveGoal>(
             service_name,
             std::bind(&CoordNode::get_goal, this, std::placeholders::_1, std::placeholders::_2));
         
-        // 初始化客户端
+        // 6. 初始化客户端
         left_traj_client_ = this->create_client<dualarm_motion_planning::srv::TrajPara>(
             "traj_parameter_r" + std::to_string(robot_id_pair[0]));
         right_traj_client_ = this->create_client<dualarm_motion_planning::srv::TrajPara>(
             "traj_parameter_r" + std::to_string(robot_id_pair[1]));
 
-        // 初始化变量
+        // 7. 初始化变量
+        current_q_r1 = Eigen::VectorXd::Zero(n_dof);
+        current_q_r2 = Eigen::VectorXd::Zero(n_dof);
         v_0_r1 = Eigen::VectorXd::Zero(n_dof);
         v_0_r2 = Eigen::VectorXd::Zero(n_dof);
     }
@@ -121,7 +119,7 @@ public:
         // 确保模型已初始化
         if (!kinematic_state_) init_model();
 
-        RCLCPP_INFO(this->get_logger(), "采用延时模式进行协调.等待目标中...");
+        RCLCPP_INFO(this->get_logger(), "协调节点运行中，等待任务指令...");
         rclcpp::Rate loop_rate(10); 
 
         while (rclcpp::ok()) 
@@ -132,13 +130,15 @@ public:
                 generate_collision_samples(DUAL_ARM);
 
                 // 获取碰撞检测样本的最大值
-                size_t sample_count_r1 = position_cartesian_r1.cols(); 
-                size_t sample_count_r2 = position_cartesian_r2.cols(); 
-                sample_size_max = std::max(sample_count_r1, sample_count_r2);
+                size_t sample_size_max = std::max(position_cartesian_r1.cols(), position_cartesian_r2.cols());
 
                 // 初始化协调器 (注意传入 shared_from_this())
                 DualArmCoordinator coordinator(shared_from_this(), collision_threshold, sample_size_max, collision_detection_sample_time
                                             , r1_links, r2_links, r1_group_name, r2_group_name);
+
+                // 设置实验元数据
+                coordinator.setExperimentMetadata(current_exp_id, current_task_type);
+
                 coordinator.coordinate(position_cartesian_r1, position_cartesian_r2, trajectory_r1, trajectory_r2);
 
                 if (coordinator.diag_collision_flag)
@@ -148,28 +148,24 @@ public:
                     {
                         coordinator.saveCollisionMatrix(package_path + "/data/collision_matrix_non_blocking.txt");
                         update_coord_result(coordinator);
-                        if (offline_replanning_mode == 1) printCoordinationResult();
+                        printCoordinationResult();
                         sendTrajectoryParameters();
                     }
                     else // 发生阻塞
                     {
                         coordinator.saveCollisionMatrix(package_path + "/data/collision_matrix_blocking.txt");
 
-                        if (coordinator.blocking_conflict_r == DualArmCoordinator::CONFLICT_R1) // R1冲突，对其进行重规划
-                        {
-                            process_replanning(coordinator, LEFT_ARM);
-                        }
-                        else if (coordinator.blocking_conflict_r == DualArmCoordinator::CONFLICT_R2)
-                        {
-                            process_replanning(coordinator, RIGHT_ARM);
-                        }
+                        // 执行重规划
+                        process_replanning(coordinator, (coordinator.blocking_conflict_r == DualArmCoordinator::CONFLICT_R1) ? LEFT_ARM : RIGHT_ARM);
                     }
                 }
                 else 
                 {
-                    if (offline_replanning_mode == 1) printCoordinationResult();
+                    printCoordinationResult();
                     sendTrajectoryParameters();
                 }
+
+                coordinator.logExperimentResult(true, 0.0); // 记录实验结果
 
                 // 参数重置
                 reset_parameters();
@@ -180,91 +176,105 @@ public:
 
 private:
     // 成员变量
-    std::string package_path;
-    int offline_replanning_mode;
-    int n_via_left = 3;
-    int n_via_right = 3;
+    std::string package_path, r1_group_name, r2_group_name;
     int n_dof;
     double collision_threshold;
     double collision_detection_sample_time;
-    std::vector<std::string> r1_links;
-    std::vector<std::string> r2_links;
-    std::string r1_group_name;
-    std::string r2_group_name;
+    std::vector<std::string> r1_links, r2_links, left_joint_names_, right_joint_names_;
     std::vector<int> robot_id_pair;
 
-    int robotid_r1 = 0;
-    int robotid_r2 = 0;
-    double delay_time_r1 = 0;
-    double delay_time_r2 = 0;
-    double v_max_r1 = 1;
-    double v_max_r2 = 1;
-    double a_max_r1 = 1;
-    double a_max_r2 = 1;
+    int robotid_r1 = 0, robotid_r2 = 0;
+    double delay_time_r1 = 0, delay_time_r2 = 0;
+    double v_max_r1 = 1, a_max_r1 = 1, v_max_r2 = 1, a_max_r2 = 1;
     
-    Eigen::VectorXd v_0_r1;
-    Eigen::VectorXd v_0_r2;
-    Eigen::MatrixXd q_path_r1;
-    Eigen::MatrixXd q_path_r2;
+    Eigen::VectorXd current_q_r1, current_q_r2, v_0_r1, v_0_r2;
+    Eigen::MatrixXd q_path_r1, q_path_r2;
+    std::mutex joint_state_mutex_;
+    std::string current_exp_id;
+    int current_task_type; // 1: 无干涉 2: 有干涉无阻塞 3: 阻塞
 
     bool change_goal_r1 = false;
     bool change_goal_r2 = false;
     bool prior_r1 = false;
     bool prior_r2 = false;
-    int sample_size_max;
     
     Eigen::MatrixXd position_cartesian_r1;
     Eigen::MatrixXd position_cartesian_r2;
     PathTrackingPlanning::Trajectory trajectory_r1;
     PathTrackingPlanning::Trajectory trajectory_r2;
 
-    // ROS 2 接口
+    // ROS2 接口定义
+    rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_state_sub_;
     rclcpp::Service<dualarm_motion_planning::srv::GiveGoal>::SharedPtr service_getgoal_;
-    rclcpp::Client<dualarm_motion_planning::srv::TrajPara>::SharedPtr left_traj_client_;
-    rclcpp::Client<dualarm_motion_planning::srv::TrajPara>::SharedPtr right_traj_client_;
+    rclcpp::Client<dualarm_motion_planning::srv::TrajPara>::SharedPtr left_traj_client_, right_traj_client_;
 
     // MoveIt 接口
     std::shared_ptr<robot_model_loader::RobotModelLoader> robot_model_loader_;
     moveit::core::RobotModelPtr kinematic_model_;
     moveit::core::RobotStatePtr kinematic_state_;
-    const moveit::core::JointModelGroup* joint_model_group_left_;
-    const moveit::core::JointModelGroup* joint_model_group_right_;
+    const moveit::core::JointModelGroup *joint_model_group_left_, *joint_model_group_right_;
 
-    // 回调函数
+    // 回调函数：解析无序的 JointState 消息
+    void joint_state_callback(const sensor_msgs::msg::JointState::SharedPtr msg)
+    {
+        std::lock_guard<std::mutex> lock(joint_state_mutex_);
+        // 遍历消息中的每一个关节
+        for (size_t i = 0; i < msg->name.size(); ++i){
+            // 检查是否属于左臂
+            for (int j = 0; j < n_dof; ++j) {
+                if (msg->name[i] == left_joint_names_[j]) {
+                    current_q_r1[j] = msg->position[i];
+                    break;
+                }
+            }
+            // 检查是否属于右臂
+            for (int j = 0; j < n_dof; ++j) {
+                if (msg->name[i] == right_joint_names_[j]) {
+                    current_q_r2[j] = msg->position[i];
+                    break;
+                }
+            }
+        }
+    }
+
+    // 回调函数 : 将当前位置和目标位置存储起来
     void get_goal(const std::shared_ptr<dualarm_motion_planning::srv::GiveGoal::Request> req,
                   std::shared_ptr<dualarm_motion_planning::srv::GiveGoal::Response> res)
     {
-        if (req->robotid == robot_id_pair[0])
-        {
-            res->received = 1;
-            n_via_left = req->qgoal.size() / n_dof;
-            q_path_r1.resize(n_via_left, n_dof);
+        std::lock_guard<std::mutex> lock(joint_state_mutex_);
+        current_exp_id = req->experiment_id;
+        current_task_type = req->task_type;
+
+        if (req->robotid == robot_id_pair[0]) {
+            int n_via = req->qgoal.size() / n_dof;
+            q_path_r1.resize(n_via + 1, n_dof);
+            q_path_r1.row(0) = current_q_r1.transpose(); // 第一行存当前位置
+            for (int i = 0; i < n_via; ++i)
+                for (int j = 0; j < n_dof; ++j)
+                    q_path_r1(i + 1, j) = req->qgoal[i * n_dof + j];
+            
             robotid_r1 = req->robotid;
-            v_max_r1 = req->v_max;
-            a_max_r1 = req->a_max;
-
-            for (int i = 0; i < n_via_left; ++i)
-                for (int j = 0; j < n_dof; ++j)
-                    q_path_r1(i, j) = req->qgoal[i*n_dof + j];
-
+            v_max_r1 = req->v_max; a_max_r1 = req->a_max;
             change_goal_r1 = true;
+
+            // std::cout << "q_path_r1:\n" << q_path_r1 << std::endl;
         }
 
-        if (req->robotid == robot_id_pair[1])
-        {
-            res->received = 1;  
-            n_via_right = req->qgoal.size() / n_dof;
-            q_path_r2.resize(n_via_right, n_dof);  
-            robotid_r2 = req->robotid;
-            v_max_r2 = req->v_max;
-            a_max_r2 = req->a_max;
-
-            for (int i = 0; i < n_via_right; ++i)
+        if (req->robotid == robot_id_pair[1]) {
+            int n_via = req->qgoal.size() / n_dof;
+            q_path_r2.resize(n_via + 1, n_dof);
+            q_path_r2.row(0) = current_q_r2.transpose(); // 第一行存当前位置
+            for (int i = 0; i < n_via; ++i)
                 for (int j = 0; j < n_dof; ++j)
-                    q_path_r2(i, j) = req->qgoal[i*n_dof + j];
+                    q_path_r2(i + 1, j) = req->qgoal[i * n_dof + j];
 
+            robotid_r2 = req->robotid;
+            v_max_r2 = req->v_max; a_max_r2 = req->a_max;
             change_goal_r2 = true;
+
+            // std::cout << "q_path_r2:\n" << q_path_r2 << std::endl;
         }
+        res->received = true;
     }
 
     void generate_collision_samples(SampleType sample_type)
@@ -339,50 +349,29 @@ private:
 
     void process_replanning(DualArmCoordinator& coordinator, SampleType conflict_arm_type)
     {
-        if (conflict_arm_type == LEFT_ARM)
-        {
-            n_via_left = coordinator.plan.trajectory_.joint_trajectory.points.size();
-            q_path_r1.resize(n_via_left, n_dof);
-            for (int i = 0; i < n_via_left; ++i)
-                for (int j = 0; j < n_dof; ++j)
-                    q_path_r1(i, j) = coordinator.plan.trajectory_.joint_trajectory.points[i].positions[j];
+        auto& q_path = (conflict_arm_type == LEFT_ARM) ? q_path_r1 : q_path_r2;
+        int n_via = coordinator.plan.trajectory_.joint_trajectory.points.size();
+        q_path.resize(n_via, n_dof);
+        for (int i = 0; i < n_via; ++i)
+            for (int j = 0; j < n_dof; ++j)
+                q_path(i, j) = coordinator.plan.trajectory_.joint_trajectory.points[i].positions[j];
 
-            generate_collision_samples(LEFT_ARM);
-        }
-        else
-        {
-            n_via_right = coordinator.plan.trajectory_.joint_trajectory.points.size();
-            q_path_r2.resize(n_via_right, n_dof);
-            for (int i = 0; i < n_via_right; ++i)
-                for (int j = 0; j < n_dof; ++j)
-                    q_path_r2(i, j) = coordinator.plan.trajectory_.joint_trajectory.points[i].positions[j];
-
-            generate_collision_samples(RIGHT_ARM);
-        }
-
-        // 重新协调
-        size_t sample_count_r1 = position_cartesian_r1.cols();
-        size_t sample_count_r2 = position_cartesian_r2.cols();
-        sample_size_max = std::max(sample_count_r1, sample_count_r2);
-        
-        DualArmCoordinator new_coordinator(shared_from_this(), collision_threshold, sample_size_max, collision_detection_sample_time
-                                          , r1_links, r2_links, r1_group_name, r2_group_name);
-        new_coordinator.coordinate(position_cartesian_r1, position_cartesian_r2, trajectory_r1, trajectory_r2);
+        generate_collision_samples(conflict_arm_type);
+        DualArmCoordinator nc(shared_from_this(), collision_threshold, std::max(position_cartesian_r1.cols(), position_cartesian_r2.cols()), 
+                             collision_detection_sample_time, r1_links, r2_links, r1_group_name, r2_group_name);
+        nc.setExperimentMetadata(current_exp_id, current_task_type);
+        nc.coordinate(position_cartesian_r1, position_cartesian_r2, trajectory_r1, trajectory_r2);
 
         std::string re_co_matrix_path = (conflict_arm_type == LEFT_ARM) ? "/data/collision_matrix_replanning_r1.txt" 
                                                                         : "/data/collision_matrix_replanning_r2.txt";
-        new_coordinator.saveCollisionMatrix(package_path + re_co_matrix_path);
+        nc.saveCollisionMatrix(package_path + re_co_matrix_path);
 
-        if (!new_coordinator.deadlock_flag)
-        {
-            update_coord_result(new_coordinator);
-            if (offline_replanning_mode == 1) printCoordinationResult();
+        if (!nc.deadlock_flag) { 
+            update_coord_result(nc);
+            printCoordinationResult();
             sendTrajectoryParameters();
         }
-        else
-        {
-            RCLCPP_WARN(this->get_logger(), "重规划后依然发生死锁阻塞，无法协调!");
-        }
+        else{ RCLCPP_WARN(this->get_logger(), "重规划后依然发生死锁阻塞，无法协调!"); }
     }
 
     // 发送轨迹参数到各臂的轨迹跟踪节点
@@ -396,29 +385,23 @@ private:
         req1->v_max = v_max_r1;
         req1->a_max = a_max_r1;
         req1->delaytime = delay_time_r1;
-        req1->qgoal.resize(n_via_left * n_dof);
-        for (int i = 0; i < n_via_left; ++i)
-            for (int j = 0; j < n_dof; ++j)
-                req1->qgoal[i * n_dof + j] = q_path_r1(i, j);
+        req1->qgoal.resize(q_path_r1.size());
+        for (int i = 0; i < q_path_r1.rows(); ++i)
+            for (int j = 0; j < q_path_r1.cols(); ++j)
+                req1->qgoal[i * q_path_r1.cols() + j] = q_path_r1(i, j);
 
         req2->robotid = robotid_r2;
         req2->v_max = v_max_r2;
         req2->a_max = a_max_r2;
         req2->delaytime = delay_time_r2;
-        req2->qgoal.resize(n_via_right * n_dof);
-        for (int i = 0; i < n_via_right; ++i)
-            for (int j = 0; j < n_dof; ++j)
-                req2->qgoal[i * n_dof + j] = q_path_r2(i, j);
+        req2->qgoal.resize(q_path_r2.size());
+        for (int i = 0; i < q_path_r2.rows(); ++i)
+            for (int j = 0; j < q_path_r2.cols(); ++j)
+                req2->qgoal[i * q_path_r2.cols() + j] = q_path_r2(i, j);
 
         // 异步发送
-        auto future1 = left_traj_client_->async_send_request(req1);
-        auto future2 = right_traj_client_->async_send_request(req2);
-
-        if (future1.wait_for(3s) == std::future_status::timeout || 
-            future2.wait_for(3s) == std::future_status::timeout)
-        {
-            RCLCPP_WARN(this->get_logger(), "服务调用超时");
-        }
+        left_traj_client_->async_send_request(req1); 
+        right_traj_client_->async_send_request(req2);
     }
 
     void reset_parameters()

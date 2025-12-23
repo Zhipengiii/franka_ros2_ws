@@ -2,5 +2,9 @@ int8 robotid
 float64[] qgoal # 存储包含所有路径点数据的数组(n_via * n_dof)
 float64 v_max
 float64 a_max
+
+string experiment_id # 实验ID 
+int32 task_type      # 任务类型 (1:FREE, 2:COLLISION, 3:BLOCKING)
+
 ---
 bool received

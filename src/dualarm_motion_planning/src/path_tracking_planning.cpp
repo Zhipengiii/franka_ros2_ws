@@ -177,6 +177,7 @@ PathTrackingPlanning::Trajectory PathTrackingPlanning::startPlanning(double samp
     if (!trajectory.points.empty()) {
         for(int j=0; j<7; ++j) {
             trajectory.points[0].position[j] = waypoints_[0][j];
+            trajectory.points[0].velocity[j] = 0.0;
         }
     }
 
@@ -207,7 +208,7 @@ size_t PathTrackingPlanning::getTrajectorySize()
 }
 
 // ============================================================
-// 数学核心：三次样条插值 (Natural Cubic Spline)
+// 数学核心：三次样条插值 (Clamped Cubic Spline) 钳位样条
 // 求解方程组 Ax = B，得到每段多项式的系数
 // ============================================================
 std::vector<PathTrackingPlanning::SplineSegment> PathTrackingPlanning::computeSpline(
@@ -217,35 +218,53 @@ std::vector<PathTrackingPlanning::SplineSegment> PathTrackingPlanning::computeSp
     if (n < 1) return {};
 
     std::vector<double> a = positions; 
-    std::vector<double> h(n), alpha(n);
+    std::vector<double> h(n);
     
     // 计算时间步长 h[i] = t[i+1] - t[i]
     for (int i = 0; i < n; ++i) h[i] = times[i + 1] - times[i];
 
-    // 计算线性方程组的右边部分 (Alpha)
-    // 这一步基于平滑条件：S_i''(t_i) = S_{i-1}''(t_i) -> 加速度连续
+    // 定义起止速度 (Clamped Boundary Conditions)
+    // 强制约束起点和终点速度为 0，符合机器人从静止启动并停止的要求
+    double v_start = 0.0;
+    double v_end = 0.0;
+
+    std::vector<double> alpha(n + 1);
+
+    // 计算边界 Alpha (Clamped)
+    // Alpha[0] = 3/h0 * (a1 - a0) - 3 * v_start
+    alpha[0] = 3.0 * (a[1] - a[0]) / h[0] - 3.0 * v_start;
+    
+    // Alpha[n] = 3 * v_end - 3/hn-1 * (an - an-1)
+    alpha[n] = 3.0 * v_end - 3.0 * (a[n] - a[n - 1]) / h[n - 1];
+
+    // 计算中间 Alpha (与自然样条相同)
     for (int i = 1; i < n; ++i)
         alpha[i] = 3.0 / h[i] * (a[i + 1] - a[i]) - 3.0 / h[i - 1] * (a[i] - a[i - 1]);
 
     // 解三对角线性方程组，得到 c[i] 系数
+    // 使用 Crout 分解法求解
     std::vector<double> c(n + 1), l(n + 1), mu(n + 1), z(n + 1);
     
-    // 边界条件：自然样条 (Natural Spline)
-    // 假设起点和终点的二阶导数(加速度)为 0
-    l[0] = 1.0; mu[0] = 0.0; z[0] = 0.0;
+    // Step 4: 边界条件处理 (Start) - 对应 Clamped Condition
+    // 方程：2h0*c0 + h0*c1 = alpha[0]
+    l[0] = 2.0 * h[0];
+    mu[0] = 0.5;
+    z[0] = alpha[0] / l[0];
 
-    // 前向消元
+    // Step 5: 前向消元 (Middle)
     for (int i = 1; i < n; ++i) {
         l[i] = 2.0 * (times[i + 1] - times[i - 1]) - h[i - 1] * mu[i - 1];
         mu[i] = h[i] / l[i];
         z[i] = (alpha[i] - h[i - 1] * z[i - 1]) / l[i];
     }
 
-    // 终点边界条件 ：终点二阶导数为 0
-    l[n] = 1.0; z[n] = 0.0; c[n] = 0.0;
+    // Step 6: 边界条件处理 (End) - 对应 Clamped Condition
+    // 方程：h_{n-1}*c_{n-1} + 2h_{n-1}*c_n = alpha[n]
+    l[n] = h[n - 1] * (2.0 - mu[n - 1]);
+    z[n] = (alpha[n] - h[n - 1] * z[n - 1]) / l[n];
+    c[n] = z[n];
 
-    // 回代求解 (Back Substitution)
-    // 得到所有段的 c, b, d 系数
+    // Step 7: 回代求解 (Back Substitution)
     std::vector<double> b(n), d(n);
     std::vector<SplineSegment> splines(n);
 
@@ -263,6 +282,61 @@ std::vector<PathTrackingPlanning::SplineSegment> PathTrackingPlanning::computeSp
 
     return splines;
 }
+
+
+// std::vector<PathTrackingPlanning::SplineSegment> PathTrackingPlanning::computeSpline(
+//     const std::vector<double>& times, const std::vector<double>& positions)
+// {
+//     int n = times.size() - 1; // 样条段数量
+//     if (n < 1) return {};
+
+//     std::vector<double> a = positions; 
+//     std::vector<double> h(n), alpha(n);
+    
+//     // 计算时间步长 h[i] = t[i+1] - t[i]
+//     for (int i = 0; i < n; ++i) h[i] = times[i + 1] - times[i];
+
+//     // 计算线性方程组的右边部分 (Alpha)
+//     // 这一步基于平滑条件：S_i''(t_i) = S_{i-1}''(t_i) -> 加速度连续
+//     for (int i = 1; i < n; ++i)
+//         alpha[i] = 3.0 / h[i] * (a[i + 1] - a[i]) - 3.0 / h[i - 1] * (a[i] - a[i - 1]);
+
+//     // 解三对角线性方程组，得到 c[i] 系数
+//     std::vector<double> c(n + 1), l(n + 1), mu(n + 1), z(n + 1);
+    
+//     // 边界条件：自然样条 (Natural Spline)
+//     // 假设起点和终点的二阶导数(加速度)为 0
+//     l[0] = 1.0; mu[0] = 0.0; z[0] = 0.0;
+
+//     // 前向消元
+//     for (int i = 1; i < n; ++i) {
+//         l[i] = 2.0 * (times[i + 1] - times[i - 1]) - h[i - 1] * mu[i - 1];
+//         mu[i] = h[i] / l[i];
+//         z[i] = (alpha[i] - h[i - 1] * z[i - 1]) / l[i];
+//     }
+
+//     // 终点边界条件 ：终点二阶导数为 0
+//     l[n] = 1.0; z[n] = 0.0; c[n] = 0.0;
+
+//     // 回代求解 (Back Substitution)
+//     // 得到所有段的 c, b, d 系数
+//     std::vector<double> b(n), d(n);
+//     std::vector<SplineSegment> splines(n);
+
+//     for (int j = n - 1; j >= 0; --j) {
+//         c[j] = z[j] - mu[j] * c[j + 1];
+//         b[j] = (a[j + 1] - a[j]) / h[j] - h[j] * (c[j + 1] + 2.0 * c[j]) / 3.0;
+//         d[j] = (c[j + 1] - c[j]) / (3.0 * h[j]);
+        
+//         splines[j].a = a[j];
+//         splines[j].b = b[j];
+//         splines[j].c = c[j];
+//         splines[j].d = d[j];
+//         splines[j].x = times[j];
+//     }
+
+//     return splines;
+// }
 
 // 样条曲线采样函数
 void PathTrackingPlanning::sampleSpline(double t, const std::vector<SplineSegment>& spline, double& pos, double& vel)

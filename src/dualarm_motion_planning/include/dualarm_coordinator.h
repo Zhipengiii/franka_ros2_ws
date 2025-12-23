@@ -52,6 +52,9 @@ public:
     std::pair<int, int> getMaxCollisionRow(); // 获取最大碰撞数量行,返回值<索引， 碰撞数量>
     std::pair<int, int> getMaxCollisionCol(); // 获取最大碰撞数量列,返回值<索引， 碰撞数量>
 
+    void setExperimentMetadata(std::string id, int type) { exp_id_ = id; task_type_ = type; }
+    void logExperimentResult(bool success, double time_ms);
+
 private:
     rclcpp::Node::SharedPtr node_;
     
@@ -61,9 +64,13 @@ private:
     double sample_time_;            // 采样时间间隔
 
     const double ARC_LENGTH_THRESHOLD = 0.25; // 标称轨迹弧长（反应机械臂移动距离）(单位：米) -> 碰撞阈值的2.5倍
+    const double obstacle_inflation_factor = 0.5; // 障碍物体积膨胀因子
     // 存储计算出的笛卡尔空间弧长
     double r1_arc_length_ = 0.0;
     double r2_arc_length_ = 0.0;
+
+    std::string exp_id_;
+    int task_type_;
     
     // 定义机器人包含的连杆名称
     std::vector<std::string> r1_links;

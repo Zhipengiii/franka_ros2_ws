@@ -30,22 +30,26 @@ def main(args=None):
     '''
         定义任务序列
         每个任务包括：
-        - action_name: 任务名称
+        - experiment_id: 实验ID（字符串）
         - target_position: 目标位置（关节空间为关节角度列表（单位：弧度），笛卡尔空间为位姿列表）
         - velocity: 最大速度（单位：弧度/秒）
         - acceleration: 最大加速度（单位：弧度/秒²）
         - action_type: 任务类型（0: 笛卡尔空间, 1: 直线空间, 2: 关节空间）
+        - task_type: 任务干涉类型（1: 无干涉, 2: 有干涉但无阻塞, 3: 发生阻塞）
     '''
 
     '''
         无干涉任务目标 : task1 ~ task6
-        有干涉任务目标 : task7 ~ task8
+        有干涉但无阻塞任务目标 : task7 ~ task8
+        发生阻塞任务目标 : 
+
     '''
 
     # 定义左臂任务序列
     left_tasks = [
+        ## 无干涉任务 -> task_type=1 ##
         TaskAction(
-            action_name="left_task1",
+            experiment_id="left_task1",
             target_position=[0.338149120939511,
                             0.221033483484982,
                             1.11721935597819,
@@ -56,10 +60,11 @@ def main(args=None):
                             ],
             velocity=1.0, 
             acceleration=5.0,
-            action_type=2  # 关节空间任务
+            action_type=2,  # 关节空间任务
+            task_type=1  # 无干涉任务
         ),
         TaskAction(
-            action_name="left_task2",
+            experiment_id="left_task2",
             target_position=[2.71928620021207,
                             0.708239146900675,
                             -1.3296850902088,
@@ -70,10 +75,11 @@ def main(args=None):
                             ],
             velocity=1.0,
             acceleration=5.0,
-            action_type=2  # 关节空间任务
+            action_type=2,  # 关节空间任务
+            task_type=1  # 无干涉任务
         ),
         TaskAction(
-            action_name="left_task3",
+            experiment_id="left_task3",
             target_position=[-0.10051553464631,
                             -1.15650858610924,
                             1.62840288764457,
@@ -84,10 +90,11 @@ def main(args=None):
                             ],
             velocity=1.0,
             acceleration=5.0,
-            action_type=2  # 关节空间任务
+            action_type=2,  # 关节空间任务
+            task_type=1  # 无干涉任务
         ),
         TaskAction(
-            action_name="left_task4",
+            experiment_id="left_task4",
             target_position=[-0.000594964476430734,
                             -1.29237917686046,
                             2.01514070467243,
@@ -98,10 +105,11 @@ def main(args=None):
                             ],
             velocity=1.0,
             acceleration=5.0,
-            action_type=2  # 关节空间任务
+            action_type=2,  # 关节空间任务
+            task_type=1  # 无干涉任务
         ),
         TaskAction(
-            action_name="left_task5",
+            experiment_id="left_task5",
             target_position=[0.0685166266820106,
                             -1.36334815676696,
                             1.88693438455792,
@@ -112,10 +120,11 @@ def main(args=None):
                             ],
             velocity=1.0,
             acceleration=5.0,
-            action_type=2  # 关节空间任务
+            action_type=2,  # 关节空间任务
+            task_type=1  # 无干涉任务
         ),
         TaskAction(
-            action_name="left_task6",
+            experiment_id="left_task6",
             target_position=[-0.311999372110413,
                             -1.2803196989883,
                             2.0798009924691,
@@ -126,43 +135,114 @@ def main(args=None):
                             ],
             velocity=1.0,
             acceleration=5.0,
-            action_type=2  # 关节空间任务
+            action_type=2,  # 关节空间任务
+            task_type=1  # 无干涉任务
         ),
         TaskAction(
-            action_name="left_task7",
-            target_position=[1.58577260370472,
-                            1.64516409556938,
-                            -0.114200996071594,
-                            -1.34868277221775,
-                            0.171720289234984,
-                            3.46115662057646,
-                            3.02359195033002,
+            experiment_id="left_task7",
+            target_position=[-0.0906116131628027,
+                            -0.905276561170065,
+                            1.04023414898884,
+                            -1.96437987815637,
+                            2.14269437110172,
+                            2.40088274271417,
+                            1.85813245853957,
                             ],
             velocity=1.0,
             acceleration=5.0,
-            action_type=2  # 关节空间任务
+            action_type=2,  # 关节空间任务
+            task_type=1  # 无干涉任务
         ),
         TaskAction(
-            action_name="left_task8",
-            target_position=[1.78074361359936,
-                            1.63590165362402,
-                            0.0801052706071601,
-                            -1.37244032211925,
-                            0.268246539803102,
-                            3.28536428912487,
-                            3.00529081473285,
+            experiment_id="left_task8",
+            target_position=[0.347135506825155,
+                            -0.47562675834594,
+                            1.4027342837499,
+                            -1.68577380983263,
+                            2.03210263961033,
+                            3.28939923185567,
+                            3.05075098764219,
                             ],
             velocity=1.0,
             acceleration=5.0,
-            action_type=2  # 关节空间任务
-        )
+            action_type=2,  # 关节空间任务
+            task_type=1  # 无干涉任务
+        ),
+        TaskAction(
+            experiment_id="left_task9",
+            target_position=[-0.782077435520977,
+                            -0.61576282644926,
+                            1.28084911835603,
+                            -1.30778723823412,
+                            2.83120019083144,
+                            3.25050479699657,
+                            2.75361394407528,
+                            ],
+            velocity=1.0,
+            acceleration=5.0,
+            action_type=2,  # 关节空间任务
+            task_type=1  # 无干涉任务
+        ),
+        TaskAction(
+            experiment_id="left_task10",
+            target_position=[-0.132196945282552,
+                            -1.0178537617282,
+                            1.73376104327706,
+                            -1.30491309112387,
+                            2.80817155350845,
+                            2.37721101730638,
+                            2.59452753749211,
+                            ],
+            velocity=1.0,
+            acceleration=5.0,
+            action_type=2,  # 关节空间任务
+            task_type=1  # 无干涉任务
+        ),
+        
+        ## 有干涉但无阻塞任务 -> task_type=2 ##
+
+
+
+
+
+
+        # TaskAction(
+        #     experiment_id="left_task7",
+        #     target_position=[1.58577260370472,
+        #                     1.64516409556938,
+        #                     -0.114200996071594,
+        #                     -1.34868277221775,
+        #                     0.171720289234984,
+        #                     3.46115662057646,
+        #                     3.02359195033002,
+        #                     ],
+        #     velocity=1.0,
+        #     acceleration=5.0,
+        #     action_type=2  # 关节空间任务
+        # ),
+        # TaskAction(
+        #     experiment_id="left_task8",
+        #     target_position=[1.78074361359936,
+        #                     1.63590165362402,
+        #                     0.0801052706071601,
+        #                     -1.37244032211925,
+        #                     0.268246539803102,
+        #                     3.28536428912487,
+        #                     3.00529081473285,
+        #                     ],
+        #     velocity=1.0,
+        #     acceleration=5.0,
+        #     action_type=2  # 关节空间任务
+        # )
     ]
     
 
+
     # 定义右臂任务序列
+    ## 无干涉任务 -> task_type=1 ##
     right_tasks = [
         TaskAction(
-            action_name="right_task1",
+            experiment_id="right_task1",
             target_position=[-0.708187247592792,
                             0.193866496411561,
                             -0.774975086327466,
@@ -173,10 +253,11 @@ def main(args=None):
                             ],
             velocity=1.0,
             acceleration=5.0,
-            action_type=2  # 关节空间任务
+            action_type=2,  # 关节空间任务
+            task_type=1  # 无干涉任务
         ),
         TaskAction(
-            action_name="right_task2",
+            experiment_id="right_task2",
             target_position=[-2.87105909611051,
                             0.600926718633396,
                             1.41558613562007,
@@ -187,10 +268,11 @@ def main(args=None):
                             ],
             velocity=1.0,
             acceleration=5.0,
-            action_type=2  # 关节空间任务
+            action_type=2,  # 关节空间任务
+            task_type=1  # 无干涉任务
         ),
         TaskAction(
-            action_name="right_task3",
+            experiment_id="right_task3",
             target_position=[-2.83820011245765,
                             1.02585486246171,
                             1.37126271867444,
@@ -201,10 +283,11 @@ def main(args=None):
                             ],
             velocity=1.0,
             acceleration=5.0,
-            action_type=2  # 关节空间任务
+            action_type=2,  # 关节空间任务
+            task_type=1  # 无干涉任务
         ),
         TaskAction(
-            action_name="right_task4",
+            experiment_id="right_task4",
             target_position=[0.512574264114717,
                             -1.16410651634981,
                             -2.5964355376164,
@@ -215,10 +298,11 @@ def main(args=None):
                             ],
             velocity=1.0,
             acceleration=5.0,
-            action_type=2  # 关节空间任务
+            action_type=2,  # 关节空间任务
+            task_type=1  # 无干涉任务
         ),
         TaskAction(
-            action_name="right_task5",
+            experiment_id="right_task5",
             target_position=[0.69852001727994,
                             -1.41802698505314,
                             -2.06551525068493,
@@ -229,10 +313,11 @@ def main(args=None):
                             ],
             velocity=1.0,
             acceleration=5.0,
-            action_type=2  # 关节空间任务
+            action_type=2,  # 关节空间任务
+            task_type=1  # 无干涉任务
         ),
         TaskAction(
-            action_name="right_task6",
+            experiment_id="right_task6",
             target_position=[0.655406536881628,
                             -1.17563772271672,
                             -2.42855965947425,
@@ -243,36 +328,107 @@ def main(args=None):
                             ],
             velocity=1.0,
             acceleration=5.0,
-            action_type=2  # 关节空间任务
+            action_type=2,  # 关节空间任务
+            task_type=1  # 无干涉任务
         ),
         TaskAction(
-            action_name="right_task7",
-            target_position=[0.920098279549726,
-                            -1.54454201253665,
-                            -2.8508801811291,
-                            -1.28260228523246,
-                            -0.32427625529282,
-                            2.88361239410001,
-                            -2.08882078953012,
+            experiment_id="right_task7",
+            target_position=[-0.335442258818482,
+                            -0.815305196893457,
+                            -1.4478770055293,
+                            -2.10178393160289,
+                            -0.0985041309305494,
+                            3.44399728306404,
+                            -2.36734248285692,
                             ],
             velocity=1.0,
             acceleration=5.0,
-            action_type=2  # 关节空间任务
+            action_type=2,  # 关节空间任务
+            task_type=1  # 无干涉任务
         ),
         TaskAction(
-            action_name="right_task8",
-            target_position=[1.60574748720504,
-                            -1.47421499090178,
-                            -2.82207053233401,
-                            -1.45958257631123,
-                            -1.47449017029752,
-                            2.9398140901056,
-                            -0.257600197323952,
+            experiment_id="right_task8",
+            target_position=[-0.264142783675645,
+                            -0.704502758380778,
+                            -1.6927112590723,
+                            -1.58478844959858,
+                            0.882246695744312,
+                            3.64548791776703,
+                            -1.43521820126721,
                             ],
             velocity=1.0,
             acceleration=5.0,
-            action_type=2  # 关节空间任务
-        )
+            action_type=2,  # 关节空间任务
+            task_type=1  # 无干涉任务
+        ),
+        TaskAction(
+            experiment_id="right_task9",
+            target_position=[-0.28069883578963,
+                            -0.242551606636084,
+                            -0.857676794129905,
+                            -1.97355589244763,
+                            0.737552861611314,
+                            3.87933448859401,
+                            -0.957219278611474,
+                            ],
+            velocity=1.0,
+            acceleration=5.0,
+            action_type=2,  # 关节空间任务
+            task_type=1  # 无干涉任务
+        ),
+        TaskAction(
+            experiment_id="right_task10",
+            target_position=[0.200685173761488,
+                            -1.19952110181726,
+                            -1.04150702879758,
+                            -1.55662264549825,
+                            -0.388779675771384,
+                            3.60761480810457,
+                            -1.09722313337724,
+                            ],
+            velocity=1.0,
+            acceleration=5.0,
+            action_type=2,  # 关节空间任务
+            task_type=1  # 无干涉任务
+        ),
+
+
+
+
+
+
+
+
+        ## 有干涉但无阻塞任务 -> task_type=2 ##
+
+        # TaskAction(
+        #     action_name="right_task7",
+        #     target_position=[0.920098279549726,
+        #                     -1.54454201253665,
+        #                     -2.8508801811291,
+        #                     -1.28260228523246,
+        #                     -0.32427625529282,
+        #                     2.88361239410001,
+        #                     -2.08882078953012,
+        #                     ],
+        #     velocity=1.0,
+        #     acceleration=5.0,
+        #     action_type=2  # 关节空间任务
+        # ),
+        # TaskAction(
+        #     action_name="right_task8",
+        #     target_position=[1.60574748720504,
+        #                     -1.47421499090178,
+        #                     -2.82207053233401,
+        #                     -1.45958257631123,
+        #                     -1.47449017029752,
+        #                     2.9398140901056,
+        #                     -0.257600197323952,
+        #                     ],
+        #     velocity=1.0,
+        #     acceleration=5.0,
+        #     action_type=2  # 关节空间任务
+        # )
     ]
     
     # 发送任务序列
